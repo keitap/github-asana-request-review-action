@@ -114,7 +114,7 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFindSubtask(t *testing.T) {
+func TestFindSubtaskByName(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaAccessToken)
 
 	pr, err := loadRequestReviewerEvent()
@@ -132,7 +132,7 @@ func TestFindSubtask(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			subtask, err := FindSubtask(c, test.taskID, githubReviewerLogin)
+			subtask, err := FindSubtaskByName(c, test.taskID, githubReviewerLogin)
 			require.NoError(t, err)
 			assert.Equal(t, test.expected, subtask != nil)
 		})

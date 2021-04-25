@@ -78,8 +78,8 @@ func AddCodeReviewSubtask(client *asana.Client, taskID string, assigneeUserID st
 	return client.CreateTask(req)
 }
 
-// FindSubtask finds a subtask which contains specified string.
-func FindSubtask(client *asana.Client, taskID string, findString string) (*asana.Task, error) {
+// FindSubtaskByName finds a subtask which contains specified string.
+func FindSubtaskByName(client *asana.Client, taskID string, findString string) (*asana.Task, error) {
 	task := &asana.Task{ID: taskID}
 
 	subtasks, _, err := task.Subtasks(client, &asana.Options{
