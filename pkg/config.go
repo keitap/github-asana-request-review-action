@@ -4,15 +4,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type githubLogin = string
-type asanaGID = string
+type GithubLogin = string
+type AsanaGID = string
 
-type config struct {
-	Accounts map[githubLogin]asanaGID `yaml:"accounts"`
+type Config struct {
+	Accounts map[GithubLogin]AsanaGID `yaml:"accounts"`
 }
 
-func loadConfig(data []byte) (*config, error) {
-	c := &config{}
+func loadConfig(data []byte) (*Config, error) {
+	c := &Config{}
 
 	err := yaml.Unmarshal(data, c)
 	if err != nil {
