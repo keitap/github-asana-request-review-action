@@ -3,7 +3,7 @@ package pkg
 import (
 	"errors"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v35/github"
 )
 
 func parseRequestReviewerEvent(name string, payload []byte) (*github.PullRequestEvent, error) {

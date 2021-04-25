@@ -1,10 +1,25 @@
 package pkg
 
 import (
+	"os"
 	"testing"
 
+	"bitbucket.org/mikehouston/asana-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+const (
+	TaskID                = "1200243266984261"
+	HasPRURLCommentTaskID = "1200243266984263"
+	NoPRURLCommentTaskID  = "1200243266984265"
+)
+
+var asanaAccessToken = ""
+
+func init() {
+	asanaAccessToken = os.Getenv("ASANA_ACCESS_TOKEN")
+}
 
 func TestParseAsanaTaskLink(t *testing.T) {
 	tests := []struct {
@@ -37,6 +52,41 @@ func TestParseAsanaTaskLink(t *testing.T) {
 			projectID, taskID := parseAsanaTaskLink(test.text)
 			assert.Equal(t, test.projectID, projectID)
 			assert.Equal(t, test.taskID, taskID)
+		})
+	}
+}
+
+func TestAddPullRequestURLToTaskComment(t *testing.T) {
+	c := asana.NewClientWithAccessToken(asanaAccessToken)
+
+	pr, err := loadRequestReviewerEvent()
+	require.NoError(t, err)
+
+	_, err = AddPullRequestURLToTaskComment(c, TaskID, pr)
+	require.NoError(t, err)
+}
+
+func TestHasCommentContainsURL(t *testing.T) {
+	c := asana.NewClientWithAccessToken(asanaAccessToken)
+
+	pr, err := loadRequestReviewerEvent()
+	require.NoError(t, err)
+
+	url := *pr.PullRequest.HTMLURL
+
+	tests := []struct {
+		name     string
+		taskID   string
+		expected bool
+	}{
+		{name: "has comment", taskID: HasPRURLCommentTaskID, expected: true},
+		{name: "no comment", taskID: NoPRURLCommentTaskID, expected: false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			value, err := HasCommentContainsURL(c, test.taskID, url)
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, value)
 		})
 	}
 }

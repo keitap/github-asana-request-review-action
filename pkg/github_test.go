@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-github/v35/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,9 +22,13 @@ func loadTestdata(filepath string) (name string, payload []byte) {
 	return s[0], payload
 }
 
-func TestParseRequestReviewerEvent(t *testing.T) {
+func loadRequestReviewerEvent() (*github.PullRequestEvent, error) {
 	name, payload := loadTestdata("testdata/pull_request-review_requested.json")
-	e, err := parseRequestReviewerEvent(name, payload)
+	return parseRequestReviewerEvent(name, payload)
+}
+
+func TestParseRequestReviewerEvent(t *testing.T) {
+	e, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
 	assert.Equal(t, "keitap-2nd", *e.RequestedReviewer.Login)
