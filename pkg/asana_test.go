@@ -13,8 +13,9 @@ import (
 const (
 	AssigneeUserID        = "5590853215184"
 	TaskID                = "1200243266984261"
+	EmptyTaskID           = "1200243266984265"
 	HasPRURLCommentTaskID = "1200243266984263"
-	NoPRURLCommentTaskID  = "1200243266984265"
+	HasSubtaskTaskID      = "1200243529563651"
 )
 
 var (
@@ -84,7 +85,7 @@ func TestHasCommentContainsURL(t *testing.T) {
 		expected bool
 	}{
 		{name: "has comment", taskID: HasPRURLCommentTaskID, expected: true},
-		{name: "no comment", taskID: NoPRURLCommentTaskID, expected: false},
+		{name: "no comment", taskID: EmptyTaskID, expected: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -105,4 +106,29 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 
 	_, err = AddCodeReviewSubtask(c, TaskID, AssigneeUserID, due, pr)
 	require.NoError(t, err)
+}
+
+func TestHasCodeReviewSubtask(t *testing.T) {
+	c := asana.NewClientWithAccessToken(asanaAccessToken)
+
+	pr, err := loadRequestReviewerEvent()
+	require.NoError(t, err)
+
+	githubReviewerLogin := *pr.RequestedReviewer.Login
+
+	tests := []struct {
+		name     string
+		taskID   string
+		expected bool
+	}{
+		{name: "has subtask", taskID: HasSubtaskTaskID, expected: true},
+		{name: "no subtask", taskID: EmptyTaskID, expected: false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			value, err := HasCodeReviewSubtask(c, test.taskID, githubReviewerLogin)
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, value)
+		})
+	}
 }
