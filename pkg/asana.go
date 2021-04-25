@@ -105,11 +105,11 @@ func createPRText(pr *github.PullRequestEvent) string {
 
 <b>%d</b> changed files (<b>+%d -%d</b>)
 
-%s
+%s at %s
 </body>`,
 		pr.Sender.GetLogin(),
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
-		signature+` at `+time.Now().Format(time.RFC3339),
+		signature, pr.GetPullRequest().GetUpdatedAt().Format(time.RFC3339),
 	)
 }
