@@ -28,7 +28,7 @@ func parseAsanaTaskLink(text string) (projectID string, taskID string) {
 func AddPullRequestURLToTaskComment(client *asana.Client, taskID string, pr *github.PullRequestEvent) (*asana.Story, error) {
 	task := &asana.Task{ID: taskID}
 	story := &asana.StoryBase{
-		HTMLText: createPRText(pr),
+		HTMLText: createPullRequestCommentText(pr),
 		IsPinned: true,
 	}
 
@@ -57,7 +57,7 @@ func FindTaskComment(client *asana.Client, taskID string, findString string) (*a
 func UpdateTaskComment(client *asana.Client, storyID string, pr *github.PullRequestEvent) (*asana.Story, error) {
 	story := &asana.Story{ID: storyID}
 	newStory := &asana.StoryBase{
-		HTMLText: createPRText(pr),
+		HTMLText: createPullRequestCommentText(pr),
 		IsPinned: true,
 	}
 
@@ -70,8 +70,8 @@ func AddCodeReviewSubtask(client *asana.Client, taskID string, requesterUserID s
 		Assignee:  assigneeUserID,
 		Followers: []string{requesterUserID},
 		TaskBase: asana.TaskBase{
-			Name:      fmt.Sprintf(`Code Review request to %s`, pr.RequestedReviewer.GetLogin()),
-			HTMLNotes: createPRText(pr),
+			Name:      fmt.Sprintf(`Code review request to %s`, pr.RequestedReviewer.GetLogin()),
+			HTMLNotes: createReviewRequestDescText(pr),
 			DueOn:     &dueDate,
 		},
 	}
@@ -99,17 +99,39 @@ func FindSubtaskByName(client *asana.Client, taskID string, findString string) (
 	return nil, nil
 }
 
-func createPRText(pr *github.PullRequestEvent) string {
+func createPullRequestCommentText(pr *github.PullRequestEvent) string {
+	reviewers := make([]string, len(pr.PullRequest.RequestedReviewers))
+	for i, u := range pr.PullRequest.RequestedReviewers {
+		reviewers[i] = u.GetLogin()
+	}
+
 	return fmt.Sprintf(`<body>Pull request is created by <b>%s</b>.
 <a href="%s">#%d: %s</a>
 
-<b>%d</b> changed files (<b>+%d -%d</b>)
+<b>%d</b> changed files (<b>➕%d ➖%d</b>)
 
-%s at %s
+Reviewers: %s
+
+Updated at %s by %s
 </body>`,
 		pr.Sender.GetLogin(),
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
-		signature, pr.GetPullRequest().GetUpdatedAt().Format(time.RFC3339),
+		strings.Join(reviewers, ", "),
+		pr.GetPullRequest().GetUpdatedAt().Format(time.RFC3339), signature,
+	)
+}
+
+func createReviewRequestDescText(pr *github.PullRequestEvent) string {
+	return fmt.Sprintf(`<body>Could you please review a pull request created by <b>%s</b> 🙇‍♂️
+<a href="%s">#%d: %s</a>
+
+After you finished a code review, pass this assign back to <b>%s</b>.
+Do not mark complete unless you are <b>%s</b>.
+</body>`,
+		pr.Sender.GetLogin(),
+		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(),
+		pr.Sender.GetLogin(),
+		pr.Sender.GetLogin(),
 	)
 }
