@@ -28,18 +28,18 @@ func main() {
 		configPath,
 		os.Getenv("GITHUB_SHA"))
 	if err != nil {
-		log.Printf("::error::cannot get config file: %s", err)
+		log.Printf("::error ::cannot get config file: %s", err)
 		os.Exit(1)
 	}
 
 	conf, err := githubasana.LoadConfig(*configData)
 	if err != nil {
-		log.Printf("::error::cannot load config file: %s", err)
+		log.Printf("::error ::cannot load config file: %s", err)
 		os.Exit(1)
 	}
 
 	if err := githubasana.Handle(conf, eventName, *eventPayload); err != nil {
-		log.Printf("::warning::cannot handle github event: %s", err)
+		log.Printf("::warning ::cannot handle github event: %s", err)
 	}
 
 	log.Printf("done.")
