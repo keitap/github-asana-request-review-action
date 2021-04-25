@@ -11,11 +11,12 @@ import (
 )
 
 const (
-	AssigneeUserID        = "5590853215184"
-	TaskID                = "1200243266984261"
-	EmptyTaskID           = "1200243266984265"
-	HasPRURLCommentTaskID = "1200243266984263"
-	HasSubtaskTaskID      = "1200243529563651"
+	AssigneeUserID            = "5590853215184"
+	TaskID                    = "1200243266984261"
+	StoryID                   = "1200243344965037"
+	EmptyTaskID               = "1200243266984265"
+	HasSignatureCommentTaskID = "1200243266984263"
+	HasSubtaskTaskID          = "1200243529563651"
 )
 
 var (
@@ -71,29 +72,34 @@ func TestAddPullRequestURLToTaskComment(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestHasCommentContainsURL(t *testing.T) {
+func TestFindTaskComment(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaAccessToken)
-
-	pr, err := loadRequestReviewerEvent()
-	require.NoError(t, err)
-
-	url := *pr.PullRequest.HTMLURL
 
 	tests := []struct {
 		name     string
 		taskID   string
 		expected bool
 	}{
-		{name: "has comment", taskID: HasPRURLCommentTaskID, expected: true},
+		{name: "has comment", taskID: HasSignatureCommentTaskID, expected: true},
 		{name: "no comment", taskID: EmptyTaskID, expected: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			value, err := HasCommentContainsURL(c, test.taskID, url)
+			story, err := FindTaskComment(c, test.taskID, signature)
 			require.NoError(t, err)
-			assert.Equal(t, test.expected, value)
+			assert.Equal(t, test.expected, story != nil)
 		})
 	}
+}
+
+func TestUpdateTaskComment(t *testing.T) {
+	c := asana.NewClientWithAccessToken(asanaAccessToken)
+
+	pr, err := loadRequestReviewerEvent()
+	require.NoError(t, err)
+
+	_, err = UpdateTaskComment(c, StoryID, pr)
+	require.NoError(t, err)
 }
 
 func TestAddCodeReviewSubtask(t *testing.T) {
@@ -108,7 +114,7 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestHasCodeReviewSubtask(t *testing.T) {
+func TestFindSubtask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaAccessToken)
 
 	pr, err := loadRequestReviewerEvent()
@@ -126,9 +132,9 @@ func TestHasCodeReviewSubtask(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			value, err := HasCodeReviewSubtask(c, test.taskID, githubReviewerLogin)
+			subtask, err := FindSubtask(c, test.taskID, githubReviewerLogin)
 			require.NoError(t, err)
-			assert.Equal(t, test.expected, value)
+			assert.Equal(t, test.expected, subtask != nil)
 		})
 	}
 }
