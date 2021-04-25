@@ -25,13 +25,13 @@ func parseAsanaTaskLink(text string) (projectID string, taskID string) {
 func AddPullRequestURLToTaskComment(client *asana.Client, taskID string, pr *github.PullRequestEvent) (*asana.Story, error) {
 	task := &asana.Task{ID: taskID}
 	story := &asana.StoryBase{
-		HTMLText: fmt.Sprintf(`<body>Pull Request:
+		HTMLText: fmt.Sprintf(`<body>Pull request is created by <b>%s</b>.
 <a href="%s">%s</a>
 
-by <b>%s</b>, <b>%d</b> changed files (<b>+%d -%d</b>)
+<b>%d</b> changed files (<b>+%d -%d</b>)
 </body>`,
-			*pr.PullRequest.HTMLURL, *pr.PullRequest.HTMLURL,
 			*pr.Sender.Login,
+			*pr.PullRequest.HTMLURL, *pr.PullRequest.HTMLURL,
 			*pr.PullRequest.ChangedFiles, *pr.PullRequest.Additions, *pr.PullRequest.Deletions,
 		),
 	}
@@ -55,4 +55,19 @@ func HasCommentContainsURL(client *asana.Client, taskID string, url string) (boo
 	}
 
 	return false, nil
+}
+
+func AddCodeReviewSubtask(client *asana.Client, taskID string, assigneeUserID string, dueDate asana.Date, pr *github.PullRequestEvent) (*asana.Task, error) {
+	req := &asana.CreateTaskRequest{
+		Parent:   taskID,
+		Assignee: assigneeUserID,
+		TaskBase: asana.TaskBase{
+			Name: fmt.Sprintf(`Code Review: [#%d] %s`, *pr.PullRequest.Number, *pr.PullRequest.Title),
+			HTMLNotes: fmt.Sprintf(`<body>
+</body>`),
+			DueOn: &dueDate,
+		},
+	}
+
+	return client.CreateTask(req)
 }

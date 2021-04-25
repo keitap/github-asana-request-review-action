@@ -3,6 +3,7 @@ package pkg
 import (
 	"os"
 	"testing"
+	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
 	"github.com/stretchr/testify/assert"
@@ -10,12 +11,15 @@ import (
 )
 
 const (
+	AssigneeUserID        = "5590853215184"
 	TaskID                = "1200243266984261"
 	HasPRURLCommentTaskID = "1200243266984263"
 	NoPRURLCommentTaskID  = "1200243266984265"
 )
 
-var asanaAccessToken = ""
+var (
+	asanaAccessToken = ""
+)
 
 func init() {
 	asanaAccessToken = os.Getenv("ASANA_ACCESS_TOKEN")
@@ -89,4 +93,16 @@ func TestHasCommentContainsURL(t *testing.T) {
 			assert.Equal(t, test.expected, value)
 		})
 	}
+}
+
+func TestAddCodeReviewSubtask(t *testing.T) {
+	c := asana.NewClientWithAccessToken(asanaAccessToken)
+
+	pr, err := loadRequestReviewerEvent()
+	require.NoError(t, err)
+
+	due := asana.Date(time.Now().AddDate(0, 0, 3))
+
+	_, err = AddCodeReviewSubtask(c, TaskID, AssigneeUserID, due, pr)
+	require.NoError(t, err)
 }
