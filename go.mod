@@ -9,4 +9,5 @@ require (
 	github.com/google/go-github/v35 v35.1.0
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78
+	gopkg.in/yaml.v2 v2.3.0
 )
