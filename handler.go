@@ -54,7 +54,7 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	log.Printf("requester: %s", requester)
 	log.Printf("reviewer: %s", reviewer)
 
-	ac := asana.NewClientWithAccessToken(os.Getenv("ASANA_ACCESS_TOKEN"))
+	ac := asana.NewClientWithAccessToken(os.Getenv("ASANA_TOKEN"))
 
 	// add a review description comment to a parent task if not exists.
 	story, err := FindTaskComment(ac, taskID, signature)

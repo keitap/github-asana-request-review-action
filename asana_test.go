@@ -21,11 +21,11 @@ const (
 )
 
 var (
-	asanaAccessToken = ""
+	asanaToken = ""
 )
 
 func init() {
-	asanaAccessToken = os.Getenv("ASANA_ACCESS_TOKEN")
+	asanaToken = os.Getenv("ASANA_TOKEN")
 }
 
 func TestParseAsanaTaskLink(t *testing.T) {
@@ -64,7 +64,7 @@ func TestParseAsanaTaskLink(t *testing.T) {
 }
 
 func TestAddPullRequestURLToTaskComment(t *testing.T) {
-	c := asana.NewClientWithAccessToken(asanaAccessToken)
+	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestAddPullRequestURLToTaskComment(t *testing.T) {
 }
 
 func TestFindTaskComment(t *testing.T) {
-	c := asana.NewClientWithAccessToken(asanaAccessToken)
+	c := asana.NewClientWithAccessToken(asanaToken)
 
 	tests := []struct {
 		name     string
@@ -94,7 +94,7 @@ func TestFindTaskComment(t *testing.T) {
 }
 
 func TestUpdateTaskComment(t *testing.T) {
-	c := asana.NewClientWithAccessToken(asanaAccessToken)
+	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
@@ -104,7 +104,7 @@ func TestUpdateTaskComment(t *testing.T) {
 }
 
 func TestAddCodeReviewSubtask(t *testing.T) {
-	c := asana.NewClientWithAccessToken(asanaAccessToken)
+	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
@@ -116,7 +116,7 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 }
 
 func TestFindSubtaskByName(t *testing.T) {
-	c := asana.NewClientWithAccessToken(asanaAccessToken)
+	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
