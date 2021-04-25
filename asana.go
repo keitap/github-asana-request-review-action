@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
 	"github.com/google/go-github/v35/github"
@@ -102,33 +101,30 @@ func FindSubtaskByName(client *asana.Client, taskID string, findString string) (
 func createPullRequestCommentText(pr *github.PullRequestEvent) string {
 	reviewers := make([]string, len(pr.PullRequest.RequestedReviewers))
 	for i, u := range pr.PullRequest.RequestedReviewers {
-		reviewers[i] = u.GetLogin()
+		reviewers[i] = fmt.Sprintf("<b>%s</b>", u.GetLogin())
 	}
 
-	return fmt.Sprintf(`<body>Pull request is created by <b>%s</b>.
-<a href="%s">#%d: %s</a>
+	return fmt.Sprintf(`<body><code><a href="%s">Pull request #%d: %s</a>
 
-<b>%d</b> changed files (<b>➕%d ➖%d</b>)
-
+<b>%d</b> changed files (<b>+%d -%d</b>) created by <b>%s</b>
 Reviewers: %s
 
-Updated at %s by %s
-</body>`,
-		pr.Sender.GetLogin(),
+by %s
+</code></body>`,
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(),
-		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
+		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(), pr.Sender.GetLogin(),
 		strings.Join(reviewers, ", "),
-		pr.GetPullRequest().GetUpdatedAt().Format(time.RFC3339), signature,
+		signature,
 	)
 }
 
 func createReviewRequestDescText(pr *github.PullRequestEvent) string {
-	return fmt.Sprintf(`<body>Could you please review a pull request created by <b>%s</b> 🙇‍♂️
+	return fmt.Sprintf(`<body><code>Could you please review a pull request created by <b>%s</b> 🙇
 <a href="%s">#%d: %s</a>
 
 After you finished a code review, pass this assign back to <b>%s</b>.
 Do not mark complete unless you are <b>%s</b>.
-</body>`,
+</code></body>`,
 		pr.Sender.GetLogin(),
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(),
 		pr.Sender.GetLogin(),
