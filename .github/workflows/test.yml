@@ -2,6 +2,16 @@ name: test
 
 on:
   pull_request:
+    types:
+      - assigned
+      - unassigned
+      - opened
+      - edited
+      - closed
+      - reopened
+      - synchronize
+      - review_requested
+      - review_request_removed
 
 jobs:
   e2e:
