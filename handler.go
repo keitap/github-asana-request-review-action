@@ -2,6 +2,7 @@ package githubasana
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -34,23 +35,10 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 		return nil
 	}
 
-	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
-
 	requester := pr.PullRequest.User.GetLogin()
 	reviewer := pr.RequestedReviewer.GetLogin()
 
-	requesterAsanaGID := conf.Accounts[requester]
-	if requesterAsanaGID == "" {
-		return errors.New("requester asana GID is not set")
-	}
-
-	reviewerAsanaGID := conf.Accounts[reviewer]
-	if reviewerAsanaGID == "" {
-		return errors.New("reviewer asana GID is not set")
-	}
-
-	due := asana.Date(time.Now().AddDate(0, 0, 3))
-
+	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
 	log.Printf("requester: %s", requester)
 	log.Printf("reviewer: %s", reviewer)
 
@@ -66,6 +54,24 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	if err := upsertPullRequestComment(ac, taskID, story, pr); err != nil {
 		return err
 	}
+
+	//
+	if reviewer == "" {
+		log.Println("reviewer is not specified.")
+		return nil
+	}
+
+	requesterAsanaGID := conf.Accounts[requester]
+	if requesterAsanaGID == "" {
+		return errors.New(fmt.Sprintf("requester asana GID is not set: %s", requester))
+	}
+
+	reviewerAsanaGID := conf.Accounts[reviewer]
+	if reviewerAsanaGID == "" {
+		return errors.New(fmt.Sprintf("reviewer asana GID is not set: %s", reviewer))
+	}
+
+	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
 	// add a review request task as a subtask if not exists.
 	subtask, err := FindSubtaskByName(ac, taskID, reviewer)
