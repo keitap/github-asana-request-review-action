@@ -25,7 +25,7 @@ func parseAsanaTaskLink(text string) (projectID string, taskID string) {
 	return m[1], m[2]
 }
 
-func AddPullRequestURLToTaskComment(client *asana.Client, taskID string, pr *github.PullRequestEvent) (*asana.Story, error) {
+func AddPullRequestCommentToTask(client *asana.Client, taskID string, pr *github.PullRequestEvent) (*asana.Story, error) {
 	task := &asana.Task{ID: taskID}
 	story := &asana.StoryBase{
 		HTMLText: createPullRequestCommentText(pr),

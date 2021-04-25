@@ -63,13 +63,13 @@ func TestParseAsanaTaskLink(t *testing.T) {
 	}
 }
 
-func TestAddPullRequestURLToTaskComment(t *testing.T) {
+func TestAddPullRequestCommentToTask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	_, err = AddPullRequestURLToTaskComment(c, TaskID, pr)
+	_, err = AddPullRequestCommentToTask(c, TaskID, pr)
 	require.NoError(t, err)
 }
 
