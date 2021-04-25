@@ -1,4 +1,5 @@
-package pkg
+// Package githubasana provides GitHub and Asana pull request task integration.
+package githubasana
 
 import (
 	"gopkg.in/yaml.v2"
