@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-github/v35/github"
 )
 
-const signature = "#github-asana-request-review-action"
+const signature = "#github-asana-request-review"
 
 var (
 	taskURLMatcher = regexp.MustCompile(`https://app.asana.com/0/(\d+)/(\d+)`)
