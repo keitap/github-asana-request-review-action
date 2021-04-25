@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v35/github"
+	githubasana "github.com/keitap/github-asana-request-review-action"
 	"golang.org/x/oauth2"
 )
 
@@ -15,9 +16,33 @@ func main() {
 	eventName := os.Getenv("GITHUB_EVENT_NAME")
 	eventPayload := getEventPayload(os.Getenv("GITHUB_EVENT_PATH"))
 
-	log.Println(gh)
-	log.Println(eventName)
-	log.Println(eventPayload)
+	log.Printf("github event: %s", eventName)
+
+	configPath := os.Getenv("INPUT_CONFIG_PATH")
+
+	log.Printf("config path: %s", configPath)
+
+	configData, err := getRepoFile(
+		gh,
+		os.Getenv("GITHUB_REPOSITORY"),
+		configPath,
+		os.Getenv("GITHUB_SHA"))
+	if err != nil {
+		log.Printf("::error::cannot get config file: %s", err)
+		os.Exit(1)
+	}
+
+	conf, err := githubasana.LoadConfig(*configData)
+	if err != nil {
+		log.Printf("::error::cannot load config file: %s", err)
+		os.Exit(1)
+	}
+
+	if err := githubasana.Handle(conf, eventName, *eventPayload); err != nil {
+		log.Printf("::warning::cannot handle github event: %s", err)
+	}
+
+	log.Printf("done.")
 }
 
 func getGithubClient(token string) *github.Client {

@@ -14,7 +14,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c, err := loadConfig(data)
+	c, err := LoadConfig(data)
 	require.NoError(t, err)
 
 	assert.Equal(t, "123", c.Accounts["user1"])
