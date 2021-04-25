@@ -53,8 +53,6 @@ func getGithubClient(token string) *github.Client {
 }
 
 func getEventPayload(path string) *[]byte {
-	log.Printf("GITHUB_EVENT_PATH: %s", path)
-
 	payload, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Failed to load event payload from %s: %s", path, err)
