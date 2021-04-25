@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	AssigneeUserID            = "5590853215184"
+	RequesterUserID           = "5590853215184"
+	AssigneeUserID            = "2540808972045"
 	TaskID                    = "1200243266984261"
 	StoryID                   = "1200243344965037"
 	EmptyTaskID               = "1200243266984265"
@@ -110,7 +111,7 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
-	_, err = AddCodeReviewSubtask(c, TaskID, AssigneeUserID, due, pr)
+	_, err = AddCodeReviewSubtask(c, TaskID, RequesterUserID, AssigneeUserID, due, pr)
 	require.NoError(t, err)
 }
 
