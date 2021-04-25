@@ -1,0 +1,14 @@
+name: 'GitHub and Asana Pull Request Task integration.'
+description: 'Whenever requested reviewer is changed, creates a review subtask to a task which is specified in a pull request description.'
+author: 'Keita Kitamura <keitap@gmail.com>'
+inputs:
+  config_path:
+    required: false
+    description: 'Path for GitHub and Asana account mapping config file.'
+    default: '.github/github-asana-request-review.yml'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: 'refresh-cw'
+  color: 'gray-dark'
