@@ -120,7 +120,7 @@ func TestFindSubtask(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	githubReviewerLogin := *pr.RequestedReviewer.Login
+	githubReviewerLogin := pr.RequestedReviewer.GetLogin()
 
 	tests := []struct {
 		name     string

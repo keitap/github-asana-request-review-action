@@ -69,7 +69,7 @@ func AddCodeReviewSubtask(client *asana.Client, taskID string, assigneeUserID st
 		Parent:   taskID,
 		Assignee: assigneeUserID,
 		TaskBase: asana.TaskBase{
-			Name:      fmt.Sprintf(`Code Review request to %s`, *pr.RequestedReviewer.Login),
+			Name:      fmt.Sprintf(`Code Review request to %s`, pr.RequestedReviewer.GetLogin()),
 			HTMLNotes: createPRText(pr),
 			DueOn:     &dueDate,
 		},
@@ -106,9 +106,9 @@ func createPRText(pr *github.PullRequestEvent) string {
 
 %s
 </body>`,
-		*pr.Sender.Login,
-		*pr.PullRequest.HTMLURL, *pr.PullRequest.Number, *pr.PullRequest.Title,
-		*pr.PullRequest.ChangedFiles, *pr.PullRequest.Additions, *pr.PullRequest.Deletions,
+		pr.Sender.GetLogin(),
+		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(),
+		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
 		signature+` at `+time.Now().Format(time.RFC3339),
 	)
 }
