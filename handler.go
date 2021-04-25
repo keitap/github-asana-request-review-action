@@ -79,8 +79,6 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 		return xerrors.Errorf(": %w", err)
 	}
 
-	var subtaskStory *asana.Story
-
 	if subtask == nil {
 		log.Printf("code review subtask not found. will create one.")
 
@@ -90,20 +88,6 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 		}
 
 		log.Printf("added code review subtask to feature task: %s", subtask.ID)
-
-		subtaskStory = nil
-	} else {
-		log.Printf("code review subtask found: %s", subtask.ID)
-
-		subtaskStory, err = FindTaskComment(ac, subtask.ID, signature)
-		if err != nil {
-			return xerrors.Errorf(": %w", err)
-		}
-	}
-
-	// upsert a review description comment of a subtask.
-	if err := upsertPullRequestComment(ac, subtask.ID, subtaskStory, pr); err != nil {
-		return err
 	}
 
 	return nil
