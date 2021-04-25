@@ -82,13 +82,19 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	var subtaskStory *asana.Story
 
 	if subtask == nil {
+		log.Printf("code review subtask not found. will create one.")
+
 		subtask, err = AddCodeReviewSubtask(ac, taskID, requesterAsanaGID, reviewerAsanaGID, due, pr)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
 
+		log.Printf("added code review subtask to feature task: %s", subtask.ID)
+
 		subtaskStory = nil
 	} else {
+		log.Printf("code review subtask found: %s", subtask.ID)
+
 		subtaskStory, err = FindTaskComment(ac, subtask.ID, signature)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
@@ -105,13 +111,17 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 
 func upsertPullRequestComment(ac *asana.Client, taskID string, story *asana.Story, pr *github.PullRequestEvent) error {
 	if story == nil {
-		if _, err := AddPullRequestURLToTaskComment(ac, taskID, pr); err != nil {
+		if _, err := AddPullRequestCommentToTask(ac, taskID, pr); err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
+
+		log.Printf("added comment to task: %s", taskID)
 	} else {
 		if _, err := UpdateTaskComment(ac, story.ID, pr); err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
+
+		log.Printf("updated comment on task: %s %s", taskID, story.ID)
 	}
 
 	return nil
