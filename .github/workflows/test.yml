@@ -1,0 +1,22 @@
+name: test
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - closed
+      - reopened
+      - synchronize
+      - review_requested
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: self test
+        uses: ./
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          ASANA_TOKEN: "${{ secrets.ASANA_TOKEN }}"
