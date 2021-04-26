@@ -107,8 +107,8 @@ github.com/imdario/mergo v0.3.9/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJ
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
-github.com/keitap/asana-go v0.0.0-20210425151158-ba9ef27944c8 h1:kSvJ0UPlHITSAG67Hmym6m0kx21qcVrtNboubLmX6SE=
-github.com/keitap/asana-go v0.0.0-20210425151158-ba9ef27944c8/go.mod h1:HcP4iCG6i6uVAyX2X7yKOsjbzLFiTfX0EMT20CYn5Ig=
+github.com/keitap/asana-go v0.0.0-20210425173123-936f596fb971 h1:Z/buJsrrpKBO2dZP5OJ5vtDgDrgshRrnfxxdppsKw40=
+github.com/keitap/asana-go v0.0.0-20210425173123-936f596fb971/go.mod h1:HcP4iCG6i6uVAyX2X7yKOsjbzLFiTfX0EMT20CYn5Ig=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
