@@ -1,5 +1,5 @@
 name: 'GitHub and Asana Pull Request Task integration.'
-description: 'Whenever requested reviewer is changed, creates a review subtask to a task which is specified in a pull request description.'
+description: 'When a reviewer is assigned on GitHub, creates a review subtask on an Asana task specified in a pull request description.'
 author: 'Keita Kitamura <keitap@gmail.com>'
 inputs:
   config_path:
