@@ -1,7 +1,6 @@
 package githubasana
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -32,12 +31,23 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
 	if projectID == "" || taskID == "" {
 		log.Println("asana task url not found in description.")
+
 		return nil
 	}
 
 	requester := pr.PullRequest.User.GetLogin()
-	reviewer := pr.RequestedReviewer.GetLogin()
 
+	for _, reviewer := range pr.PullRequest.RequestedReviewers {
+		err := addReviewer(conf, pr, requester, reviewer.GetLogin(), projectID, taskID)
+		if err != nil {
+			return xerrors.Errorf(": %w", err)
+		}
+	}
+
+	return nil
+}
+
+func addReviewer(conf *Config, pr *github.PullRequestEvent, requester string, reviewer string, projectID string, taskID string) error {
 	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
 	log.Printf("requester: %s", requester)
 	log.Printf("reviewer: %s", reviewer)
@@ -63,12 +73,12 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 
 	requesterAsanaGID := conf.Accounts[requester]
 	if requesterAsanaGID == "" {
-		return errors.New(fmt.Sprintf("requester asana GID is not set: %s", requester))
+		return fmt.Errorf("requester asana GID is not set: %s", requester)
 	}
 
 	reviewerAsanaGID := conf.Accounts[reviewer]
 	if reviewerAsanaGID == "" {
-		return errors.New(fmt.Sprintf("reviewer asana GID is not set: %s", reviewer))
+		return fmt.Errorf("reviewer asana GID is not set: %s", reviewer)
 	}
 
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
@@ -82,7 +92,7 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	if subtask == nil {
 		log.Printf("code review subtask not found. will create one.")
 
-		subtask, err = AddCodeReviewSubtask(ac, taskID, requesterAsanaGID, reviewerAsanaGID, due, pr)
+		subtask, err = AddCodeReviewSubtask(ac, taskID, requesterAsanaGID, reviewerAsanaGID, reviewer, due, pr)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}

@@ -31,5 +31,5 @@ func TestParseRequestReviewerEvent(t *testing.T) {
 	e, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	assert.Equal(t, "keitap-2nd", *e.RequestedReviewer.Login)
+	assert.Equal(t, "keitap-2nd", e.PullRequest.RequestedReviewers[0].GetLogin())
 }
