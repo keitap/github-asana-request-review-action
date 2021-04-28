@@ -1,7 +1,6 @@
 package githubasana
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -63,12 +62,12 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 
 	requesterAsanaGID := conf.Accounts[requester]
 	if requesterAsanaGID == "" {
-		return errors.New(fmt.Sprintf("requester asana GID is not set: %s", requester))
+		return fmt.Errorf("requester asana GID is not set: %s", requester)
 	}
 
 	reviewerAsanaGID := conf.Accounts[reviewer]
 	if reviewerAsanaGID == "" {
-		return errors.New(fmt.Sprintf("reviewer asana GID is not set: %s", reviewer))
+		return fmt.Errorf("reviewer asana GID is not set: %s", reviewer)
 	}
 
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
