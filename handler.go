@@ -31,12 +31,23 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
 	if projectID == "" || taskID == "" {
 		log.Println("asana task url not found in description.")
+
 		return nil
 	}
 
 	requester := pr.PullRequest.User.GetLogin()
-	reviewer := pr.RequestedReviewer.GetLogin()
 
+	for _, reviewer := range pr.PullRequest.RequestedReviewers {
+		err := addReviewer(conf, pr, requester, reviewer.GetLogin(), projectID, taskID)
+		if err != nil {
+			return xerrors.Errorf(": %w", err)
+		}
+	}
+
+	return nil
+}
+
+func addReviewer(conf *Config, pr *github.PullRequestEvent, requester string, reviewer string, projectID string, taskID string) error {
 	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
 	log.Printf("requester: %s", requester)
 	log.Printf("reviewer: %s", reviewer)
