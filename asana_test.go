@@ -109,9 +109,10 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
+	reviewer := pr.PullRequest.RequestedReviewers[0].GetLogin()
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
-	_, err = AddCodeReviewSubtask(c, TaskID, RequesterUserID, AssigneeUserID, due, pr)
+	_, err = AddCodeReviewSubtask(c, TaskID, RequesterUserID, AssigneeUserID, reviewer, due, pr)
 	require.NoError(t, err)
 }
 
@@ -121,7 +122,7 @@ func TestFindSubtaskByName(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	githubReviewerLogin := pr.RequestedReviewer.GetLogin()
+	githubReviewerLogin := pr.PullRequest.RequestedReviewers[0].GetLogin()
 
 	tests := []struct {
 		name     string

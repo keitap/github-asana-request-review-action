@@ -63,13 +63,13 @@ func UpdateTaskComment(client *asana.Client, storyID string, pr *github.PullRequ
 	return story.UpdateStory(client, newStory)
 }
 
-func AddCodeReviewSubtask(client *asana.Client, taskID string, requesterUserID string, assigneeUserID string, dueDate asana.Date, pr *github.PullRequestEvent) (*asana.Task, error) {
+func AddCodeReviewSubtask(client *asana.Client, taskID string, requesterUserID string, assigneeUserID string, reviewer string, dueDate asana.Date, pr *github.PullRequestEvent) (*asana.Task, error) {
 	req := &asana.CreateTaskRequest{
 		Parent:    taskID,
 		Assignee:  assigneeUserID,
 		Followers: []string{requesterUserID},
 		TaskBase: asana.TaskBase{
-			Name:      fmt.Sprintf(`Code review request to %s`, pr.RequestedReviewer.GetLogin()),
+			Name:      fmt.Sprintf(`Code review request to %s`, reviewer),
 			HTMLNotes: createReviewRequestDescText(pr),
 			DueOn:     &dueDate,
 		},
