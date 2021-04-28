@@ -1,3 +1,3 @@
-# github-asana-request-review-action
+THIS PULL REQUEST IS FOR TESTING PURPOSE.
 
-When a reviewer is assigned on GitHub, creates a review subtask on an Asana task specified in a pull request description.
+DO NOT MERGE.
