@@ -49,6 +49,7 @@ func getGithubClient(token string) *github.Client {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	client := oauth2.NewClient(ctx, ts)
+
 	return github.NewClient(client)
 }
 
@@ -79,9 +80,11 @@ func getRepoFile(gh *github.Client, repo, file, sha string) (*[]byte, error) {
 
 	if err != nil {
 		log.Printf("Unable to load file from %s@%s/%s: %s", repo, sha, file, err)
+
 		return nil, err
 	}
 
 	raw := []byte(content)
+
 	return &raw, err
 }

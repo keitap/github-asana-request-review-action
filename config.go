@@ -5,8 +5,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type GithubLogin = string
-type AsanaGID = string
+type (
+	GithubLogin = string
+	AsanaGID    = string
+)
 
 type Config struct {
 	Accounts map[GithubLogin]AsanaGID `yaml:"accounts"`
