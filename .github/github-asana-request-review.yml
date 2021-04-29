@@ -1,4 +1,5 @@
 accounts:
   # GitHub Login Name: Asana User GID
+  # https://app.asana.com/api/1.0/users
   keitap: 5590853215184
   keitap-2nd: 2540808972045
