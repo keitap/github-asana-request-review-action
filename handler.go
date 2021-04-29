@@ -47,7 +47,7 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 
 	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
 
-	requester, err := h.FetchAccount(pr.PullRequest.User.GetLogin())
+	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
@@ -56,7 +56,7 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 
 	reviewers := make([]*Account, len(pr.PullRequest.RequestedReviewers))
 	for i, r := range pr.PullRequest.RequestedReviewers {
-		reviewers[i], err = h.FetchAccount(r.GetLogin())
+		reviewers[i], err = h.fetchAccount(r.GetLogin())
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
