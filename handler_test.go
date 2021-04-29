@@ -8,6 +8,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var prEvent = &github.PullRequestEvent{
+	Action: pString("review_requested"),
+	PullRequest: &github.PullRequest{
+		Number:       pInt(1),
+		Title:        pString("title"),
+		Body:         pString("task is here:\nhttps://app.asana.com/0/1200243266984258/1200265547631636/f"),
+		ChangedFiles: pInt(1),
+		Additions:    pInt(2),
+		Deletions:    pInt(3),
+		HTMLURL:      pString("https://github.com/keitap/github-actions-test/pull/1"),
+		RequestedReviewers: []*github.User{
+			{
+				Login: pString("keitap-2nd"),
+			},
+			{
+				Login: pString("no-asana-user"),
+			},
+		},
+		User: &github.User{
+			Login: pString("keitap"),
+		},
+	},
+}
+
 func pString(s string) *string {
 	return &s
 }
@@ -28,30 +52,17 @@ func TestHandler_handlePullRequestEvent(t *testing.T) {
 
 	h := NewHandler(conf, ac)
 
-	pr := &github.PullRequestEvent{
-		Action: pString("review_requested"),
-		PullRequest: &github.PullRequest{
-			Number:       pInt(1),
-			Title:        pString("title"),
-			Body:         pString("task is here:\nhttps://app.asana.com/0/1200243266984258/1200265547631636/f"),
-			ChangedFiles: pInt(1),
-			Additions:    pInt(2),
-			Deletions:    pInt(3),
-			HTMLURL:      pString("https://github.com/keitap/github-actions-test/pull/1"),
-			RequestedReviewers: []*github.User{
-				{
-					Login: pString("keitap-2nd"),
-				},
-				{
-					Login: pString("no-asana-user"),
-				},
-			},
-			User: &github.User{
-				Login: pString("keitap"),
-			},
-		},
-	}
+	err := h.handlePullRequestEvent(prEvent)
+	require.NoError(t, err)
+}
 
-	err := h.handlePullRequestEvent(pr)
+func TestHandler_handlePullRequestEvent_NoConfig(t *testing.T) {
+	conf := &Config{}
+
+	ac := asana.NewClientWithAccessToken(asanaToken)
+
+	h := NewHandler(conf, ac)
+
+	err := h.handlePullRequestEvent(prEvent)
 	require.NoError(t, err)
 }
