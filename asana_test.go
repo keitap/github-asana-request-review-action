@@ -11,19 +11,65 @@ import (
 )
 
 const (
-	RequesterUserID           = "5590853215184"
-	AssigneeUserID            = "2540808972045"
-	TaskID                    = "1200243266984261"
-	StoryID                   = "1200243344965037"
-	EmptyTaskID               = "1200243266984265"
-	HasSignatureCommentTaskID = "1200243266984263"
-	HasSubtaskTaskID          = "1200243529563651"
+	projectID                 = "1200243266984258"
+	storyID                   = "1200243344965037"
+	emptyTaskID               = "1200243266984265"
+	hasSignatureCommentTaskID = "1200243266984263"
+	hasSubtaskTaskID          = "1200243529563651"
 )
 
-var asanaToken = ""
+var (
+	asanaToken = ""
+	taskID     = ""
+
+	requester = &Account{
+		Name:         "Keita Kitamura",
+		AsanaUserGID: "5590853215184",
+		GitHubLogin:  "keitap",
+	}
+
+	reviewer = &Account{
+		Name:         "Keita Kitamura",
+		AsanaUserGID: "2540808972045",
+		GitHubLogin:  "keitap",
+	}
+	reviewers = []*Account{
+		reviewer,
+		{
+			Name:         "no_asana_user",
+			AsanaUserGID: "",
+			GitHubLogin:  "no_asana_user",
+		},
+	}
+)
 
 func init() {
 	asanaToken = os.Getenv("ASANA_TOKEN")
+}
+
+func createTask() string {
+	if taskID != "" {
+		return taskID
+	}
+
+	c := asana.NewClientWithAccessToken(asanaToken)
+
+	req := &asana.CreateTaskRequest{
+		TaskBase: asana.TaskBase{
+			Name:  "Test " + time.Now().Format(time.RFC3339),
+			Notes: "This task is for testing purpose.\nNo problem to delete as you like.",
+		},
+		Projects: []string{projectID},
+	}
+
+	task, err := c.CreateTask(req)
+	if err != nil {
+		panic(err)
+	}
+
+	taskID = task.ID
+
+	return taskID
 }
 
 func TestParseAsanaTaskLink(t *testing.T) {
@@ -67,7 +113,9 @@ func TestAddPullRequestCommentToTask(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	_, err = AddPullRequestCommentToTask(c, TaskID, pr)
+	taskID := createTask()
+
+	_, err = AddPullRequestCommentToTask(c, taskID, requester, reviewers, pr)
 	require.NoError(t, err)
 }
 
@@ -79,8 +127,8 @@ func TestFindTaskComment(t *testing.T) {
 		taskID   string
 		expected bool
 	}{
-		{name: "has comment", taskID: HasSignatureCommentTaskID, expected: true},
-		{name: "no comment", taskID: EmptyTaskID, expected: false},
+		{name: "has comment", taskID: hasSignatureCommentTaskID, expected: true},
+		{name: "no comment", taskID: emptyTaskID, expected: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -97,7 +145,7 @@ func TestUpdateTaskComment(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	_, err = UpdateTaskComment(c, StoryID, pr)
+	_, err = UpdateTaskComment(c, storyID, requester, reviewers, pr)
 	require.NoError(t, err)
 }
 
@@ -107,10 +155,10 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	reviewer := pr.PullRequest.RequestedReviewers[0].GetLogin()
+	taskID := createTask()
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
-	_, err = AddCodeReviewSubtask(c, TaskID, RequesterUserID, AssigneeUserID, reviewer, due, pr)
+	_, err = AddCodeReviewSubtask(c, taskID, requester, reviewer, due, pr)
 	require.NoError(t, err)
 }
 
@@ -127,8 +175,8 @@ func TestFindSubtaskByName(t *testing.T) {
 		taskID   string
 		expected bool
 	}{
-		{name: "has subtask", taskID: HasSubtaskTaskID, expected: true},
-		{name: "no subtask", taskID: EmptyTaskID, expected: false},
+		{name: "has subtask", taskID: hasSubtaskTaskID, expected: true},
+		{name: "no subtask", taskID: emptyTaskID, expected: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

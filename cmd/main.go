@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"bitbucket.org/mikehouston/asana-go"
 	"github.com/google/go-github/v35/github"
 	githubasana "github.com/keitap/github-asana-request-review-action"
 	"golang.org/x/oauth2"
@@ -38,7 +39,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := githubasana.Handle(conf, eventName, *eventPayload); err != nil {
+	ac := asana.NewClientWithAccessToken(os.Getenv("ASANA_TOKEN"))
+
+	h := githubasana.NewHandler(conf, ac)
+
+	if err := h.Handle(eventName, *eventPayload); err != nil {
 		log.Printf("::warning ::cannot handle github event: %s", err)
 	}
 

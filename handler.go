@@ -1,9 +1,7 @@
 package githubasana
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
@@ -11,7 +9,19 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func Handle(conf *Config, eventName string, eventPayload []byte) error {
+type Handler struct {
+	conf *Config
+	ac   *asana.Client
+}
+
+func NewHandler(conf *Config, asanaClient *asana.Client) *Handler {
+	return &Handler{
+		conf: conf,
+		ac:   asanaClient,
+	}
+}
+
+func (h *Handler) Handle(eventName string, eventPayload []byte) error {
 	event, err := github.ParseWebHook(eventName, eventPayload)
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
@@ -19,7 +29,7 @@ func Handle(conf *Config, eventName string, eventPayload []byte) error {
 
 	switch e := event.(type) {
 	case *github.PullRequestEvent:
-		return handlePullRequestEvent(conf, e)
+		return h.handlePullRequestEvent(e)
 	default:
 		log.Println("unknown event: " + eventName)
 	}
@@ -27,7 +37,7 @@ func Handle(conf *Config, eventName string, eventPayload []byte) error {
 	return nil
 }
 
-func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
+func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 	projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
 	if projectID == "" || taskID == "" {
 		log.Println("asana task url not found in description.")
@@ -35,10 +45,32 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 		return nil
 	}
 
-	requester := pr.PullRequest.User.GetLogin()
+	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
 
-	for _, reviewer := range pr.PullRequest.RequestedReviewers {
-		err := addReviewer(conf, pr, requester, reviewer.GetLogin(), projectID, taskID)
+	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	log.Printf("requester: %s", requester)
+
+	reviewers := make([]*Account, len(pr.PullRequest.RequestedReviewers))
+	for i, r := range pr.PullRequest.RequestedReviewers {
+		reviewers[i], err = h.fetchAccount(r.GetLogin())
+		if err != nil {
+			return xerrors.Errorf(": %w", err)
+		}
+
+		log.Printf("reviewer: %s", reviewers[i])
+	}
+
+	// add a review description comment to a parent task if not exists.
+	if err := h.updateTask(pr, requester, reviewers, taskID); err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	for _, reviewer := range reviewers {
+		err := h.addReviewer(pr, requester, reviewer, taskID)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
@@ -47,45 +79,32 @@ func handlePullRequestEvent(conf *Config, pr *github.PullRequestEvent) error {
 	return nil
 }
 
-func addReviewer(conf *Config, pr *github.PullRequestEvent, requester string, reviewer string, projectID string, taskID string) error {
-	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
-	log.Printf("requester: %s", requester)
-	log.Printf("reviewer: %s", reviewer)
-
-	ac := asana.NewClientWithAccessToken(os.Getenv("ASANA_TOKEN"))
-
+func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, reviewers []*Account, taskID string) error {
 	// add a review description comment to a parent task if not exists.
-	story, err := FindTaskComment(ac, taskID, signature)
+	story, err := FindTaskComment(h.ac, taskID, signature)
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
 
 	// upsert a review description comment of a parent task.
-	if err := upsertPullRequestComment(ac, taskID, story, pr); err != nil {
-		return err
+	if err := h.upsertPullRequestComment(taskID, story, requester, reviewers, pr); err != nil {
+		return xerrors.Errorf(": %w", err)
 	}
 
-	//
-	if reviewer == "" {
-		log.Println("reviewer is not specified.")
+	return nil
+}
+
+func (h *Handler) addReviewer(pr *github.PullRequestEvent, requester *Account, reviewer *Account, taskID string) error {
+	if reviewer.AsanaUserGID == "" {
+		log.Printf("reviewer has no asana account: %s", reviewer.GitHubLogin)
 
 		return nil
-	}
-
-	requesterAsanaGID := conf.Accounts[requester]
-	if requesterAsanaGID == "" {
-		return fmt.Errorf("requester asana GID is not set: %s", requester)
-	}
-
-	reviewerAsanaGID := conf.Accounts[reviewer]
-	if reviewerAsanaGID == "" {
-		return fmt.Errorf("reviewer asana GID is not set: %s", reviewer)
 	}
 
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
 	// add a review request task as a subtask if not exists.
-	subtask, err := FindSubtaskByName(ac, taskID, reviewer)
+	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
@@ -93,7 +112,7 @@ func addReviewer(conf *Config, pr *github.PullRequestEvent, requester string, re
 	if subtask == nil {
 		log.Printf("code review subtask not found. will create one.")
 
-		subtask, err = AddCodeReviewSubtask(ac, taskID, requesterAsanaGID, reviewerAsanaGID, reviewer, due, pr)
+		subtask, err = AddCodeReviewSubtask(h.ac, taskID, requester, reviewer, due, pr)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
@@ -104,15 +123,15 @@ func addReviewer(conf *Config, pr *github.PullRequestEvent, requester string, re
 	return nil
 }
 
-func upsertPullRequestComment(ac *asana.Client, taskID string, story *asana.Story, pr *github.PullRequestEvent) error {
+func (h *Handler) upsertPullRequestComment(taskID string, story *asana.Story, requester *Account, reviewers []*Account, pr *github.PullRequestEvent) error {
 	if story == nil {
-		if _, err := AddPullRequestCommentToTask(ac, taskID, pr); err != nil {
+		if _, err := AddPullRequestCommentToTask(h.ac, taskID, requester, reviewers, pr); err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
 
 		log.Printf("added comment to task: %s", taskID)
 	} else {
-		if _, err := UpdateTaskComment(ac, story.ID, pr); err != nil {
+		if _, err := UpdateTaskComment(h.ac, story.ID, requester, reviewers, pr); err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
 
@@ -120,4 +139,19 @@ func upsertPullRequestComment(ac *asana.Client, taskID string, story *asana.Stor
 	}
 
 	return nil
+}
+
+func (h *Handler) fetchAccount(githubLogin string) (*Account, error) {
+	userGID := h.conf.Accounts[githubLogin]
+
+	if userGID == "" {
+		return NewNoAsanaAccount(githubLogin), nil
+	}
+
+	a, err := NewAccount(h.ac, userGID, githubLogin)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }
