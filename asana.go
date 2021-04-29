@@ -11,13 +11,11 @@ import (
 
 const signature = "#github-asana-request-review"
 
-var (
-	taskURLMatcher = regexp.MustCompile(`https://app.asana.com/0/(\d+)/(\d+)`)
-)
+var taskURLMatcher = regexp.MustCompile(`https://app.asana.com/0/(\d+)/(\d+)`)
 
 func parseAsanaTaskLink(text string) (projectID string, taskID string) {
 	m := taskURLMatcher.FindStringSubmatch(text)
-	if len(m) <= 0 {
+	if len(m) == 0 {
 		return "", ""
 	}
 

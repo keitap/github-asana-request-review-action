@@ -15,7 +15,7 @@ func parseRequestReviewerEvent(name string, payload []byte) (*github.PullRequest
 	switch event := event.(type) {
 	case *github.PullRequestEvent:
 		return event, nil
+	default:
+		return nil, errors.New("unknown event type: " + name)
 	}
-
-	return nil, errors.New("unknown event type: " + name)
 }

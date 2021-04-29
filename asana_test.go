@@ -20,9 +20,7 @@ const (
 	HasSubtaskTaskID          = "1200243529563651"
 )
 
-var (
-	asanaToken = ""
-)
+var asanaToken = ""
 
 func init() {
 	asanaToken = os.Getenv("ASANA_TOKEN")

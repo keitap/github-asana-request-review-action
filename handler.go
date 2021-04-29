@@ -68,6 +68,7 @@ func addReviewer(conf *Config, pr *github.PullRequestEvent, requester string, re
 	//
 	if reviewer == "" {
 		log.Println("reviewer is not specified.")
+
 		return nil
 	}
 

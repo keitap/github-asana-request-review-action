@@ -24,6 +24,7 @@ func loadTestdata(filepath string) (name string, payload []byte) {
 
 func loadRequestReviewerEvent() (*github.PullRequestEvent, error) {
 	name, payload := loadTestdata("testdata/pull_request-review_requested.json")
+
 	return parseRequestReviewerEvent(name, payload)
 }
 
