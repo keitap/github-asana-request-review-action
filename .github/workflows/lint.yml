@@ -2,7 +2,9 @@ name: lint
 
 on:
   push:
-  pull_request:
+    paths:
+      - 'go.mod'
+      - '**/*.go'
 
 jobs:
   lint:
