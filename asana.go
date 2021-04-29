@@ -67,7 +67,7 @@ func AddCodeReviewSubtask(client *asana.Client, taskID string, requester *Accoun
 		Assignee:  reviewer.AsanaUserGID,
 		Followers: []string{requester.AsanaUserGID},
 		TaskBase: asana.TaskBase{
-			Name:      fmt.Sprintf(`Code review request to %s`, reviewer),
+			Name:      fmt.Sprintf(`✍️ Code review request to %s`, reviewer),
 			HTMLNotes: createReviewRequestDescText(requester, pr),
 			DueOn:     &dueDate,
 		},
@@ -102,7 +102,7 @@ func createPullRequestCommentText(requester *Account, reviewers []*Account, pr *
 		users[i] = u.GetUserPermalink()
 	}
 
-	return fmt.Sprintf(`<body><code><a href="%s">Pull request #%d: %s</a> by %s
+	return fmt.Sprintf(`<body>📋 <code><a href="%s">Pull request #%d: %s</a> by %s
 
 <b>%d</b> changed files (<b>+%d -%d</b>)
 Reviewers: %s
