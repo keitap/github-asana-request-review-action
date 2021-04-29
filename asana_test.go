@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	RequesterUserID           = "5590853215184"
-	AssigneeUserID            = "2540808972045"
 	TaskID                    = "1200243266984261"
 	StoryID                   = "1200243344965037"
 	EmptyTaskID               = "1200243266984265"
@@ -20,7 +18,29 @@ const (
 	HasSubtaskTaskID          = "1200243529563651"
 )
 
-var asanaToken = ""
+var (
+	asanaToken = ""
+
+	requester = &Account{
+		Name:         "Keita Kitamura",
+		AsanaUserGID: "5590853215184",
+		GitHubLogin:  "keitap",
+	}
+
+	reviewer = &Account{
+		Name:         "Keita Kitamura",
+		AsanaUserGID: "2540808972045",
+		GitHubLogin:  "keitap",
+	}
+	reviewers = []*Account{
+		reviewer,
+		{
+			Name:         "no_asana_user",
+			AsanaUserGID: "",
+			GitHubLogin:  "no_asana_user",
+		},
+	}
+)
 
 func init() {
 	asanaToken = os.Getenv("ASANA_TOKEN")
@@ -67,7 +87,7 @@ func TestAddPullRequestCommentToTask(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	_, err = AddPullRequestCommentToTask(c, TaskID, pr)
+	_, err = AddPullRequestCommentToTask(c, TaskID, requester, reviewers, pr)
 	require.NoError(t, err)
 }
 
@@ -97,7 +117,7 @@ func TestUpdateTaskComment(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	_, err = UpdateTaskComment(c, StoryID, pr)
+	_, err = UpdateTaskComment(c, StoryID, requester, reviewers, pr)
 	require.NoError(t, err)
 }
 
@@ -107,10 +127,9 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	reviewer := pr.PullRequest.RequestedReviewers[0].GetLogin()
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
-	_, err = AddCodeReviewSubtask(c, TaskID, RequesterUserID, AssigneeUserID, reviewer, due, pr)
+	_, err = AddCodeReviewSubtask(c, TaskID, requester, reviewer, due, pr)
 	require.NoError(t, err)
 }
 
