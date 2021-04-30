@@ -41,7 +41,7 @@ func main() {
 
 	ac := asana.NewClientWithAccessToken(os.Getenv("ASANA_TOKEN"))
 
-	h := githubasana.NewHandler(conf, ac)
+	h := githubasana.NewHandler(conf, ac, gh)
 
 	if err := h.Handle(eventName, *eventPayload); err != nil {
 		log.Printf("::warning ::cannot handle github event: %s", err)

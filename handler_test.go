@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var prEvent = &github.PullRequestEvent{
+var prEventReviewRequested = &github.PullRequestEvent{
 	Action: pString("review_requested"),
 	PullRequest: &github.PullRequest{
 		Number:       pInt(1),
@@ -49,10 +49,11 @@ func TestHandler_handlePullRequestEvent(t *testing.T) {
 	}
 
 	ac := asana.NewClientWithAccessToken(asanaToken)
+	gh := github.NewClient(nil)
 
-	h := NewHandler(conf, ac)
+	h := NewHandler(conf, ac, gh)
 
-	err := h.handlePullRequestEvent(prEvent)
+	err := h.handlePullRequestEvent(prEventReviewRequested)
 	require.NoError(t, err)
 }
 
@@ -60,9 +61,10 @@ func TestHandler_handlePullRequestEvent_NoConfig(t *testing.T) {
 	conf := &Config{}
 
 	ac := asana.NewClientWithAccessToken(asanaToken)
+	gh := github.NewClient(nil)
 
-	h := NewHandler(conf, ac)
+	h := NewHandler(conf, ac, gh)
 
-	err := h.handlePullRequestEvent(prEvent)
+	err := h.handlePullRequestEvent(prEventReviewRequested)
 	require.NoError(t, err)
 }
