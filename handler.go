@@ -9,15 +9,22 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const (
+	prEventActionReviewRequested        = "review_requested"
+	prEventActionReviewRequestedRemoved = "review_request_removed"
+)
+
 type Handler struct {
 	conf *Config
 	ac   *asana.Client
+	gh   *github.Client
 }
 
-func NewHandler(conf *Config, asanaClient *asana.Client) *Handler {
+func NewHandler(conf *Config, asanaClient *asana.Client, githubClient *github.Client) *Handler {
 	return &Handler{
 		conf: conf,
 		ac:   asanaClient,
+		gh:   githubClient,
 	}
 }
 
@@ -54,8 +61,25 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 
 	log.Printf("requester: %s", requester)
 
-	reviewers := make([]*Account, len(pr.PullRequest.RequestedReviewers))
-	for i, r := range pr.PullRequest.RequestedReviewers {
+	var ghReviewers []*github.User
+	var reviewers []*Account
+
+	isUpdateReviewer := pr.GetAction() == prEventActionReviewRequested ||
+		pr.GetAction() == prEventActionReviewRequestedRemoved
+
+	if isUpdateReviewer {
+		ghReviewers = pr.PullRequest.RequestedReviewers
+	} else {
+		// handle pr.PullRequest.RequestedReviewers is not set.
+		ghReviewers, err = getRequestedReviewers(h.gh, pr.GetRepo().GetOwner().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber())
+		if err != nil {
+			return xerrors.Errorf(": %w", err)
+		}
+	}
+
+	reviewers = make([]*Account, len(ghReviewers))
+
+	for i, r := range ghReviewers {
 		reviewers[i], err = h.fetchAccount(r.GetLogin())
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
@@ -69,10 +93,12 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 		return xerrors.Errorf(": %w", err)
 	}
 
-	for _, reviewer := range reviewers {
-		err := h.addReviewer(pr, requester, reviewer, taskID)
-		if err != nil {
-			return xerrors.Errorf(": %w", err)
+	if isUpdateReviewer {
+		for _, reviewer := range reviewers {
+			err := h.addReviewer(pr, requester, reviewer, taskID)
+			if err != nil {
+				return xerrors.Errorf(": %w", err)
+			}
 		}
 	}
 
