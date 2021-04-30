@@ -4,11 +4,15 @@ on:
   pull_request:
     types:
       - opened
-      - edited
       - closed
       - reopened
       - synchronize
       - review_requested
+      - review_request_removed
+  pull_request_review:
+    types:
+      - submitted
+      - dismissed
 
 jobs:
   e2e:
