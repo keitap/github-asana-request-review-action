@@ -9,6 +9,11 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const (
+	prEventActionReviewRequested        = "review_requested"
+	prEventActionReviewRequestedRemoved = "review_request_removed"
+)
+
 type Handler struct {
 	conf *Config
 	ac   *asana.Client
@@ -59,7 +64,10 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 	var ghReviewers []*github.User
 	var reviewers []*Account
 
-	if pr.GetAction() == "review_requested" || pr.GetAction() == "review_request_removed" {
+	isUpdateReviewer := pr.GetAction() == prEventActionReviewRequested ||
+		pr.GetAction() == prEventActionReviewRequestedRemoved
+
+	if isUpdateReviewer {
 		ghReviewers = pr.PullRequest.RequestedReviewers
 	} else {
 		// handle pr.PullRequest.RequestedReviewers is not set.
@@ -85,10 +93,12 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 		return xerrors.Errorf(": %w", err)
 	}
 
-	for _, reviewer := range reviewers {
-		err := h.addReviewer(pr, requester, reviewer, taskID)
-		if err != nil {
-			return xerrors.Errorf(": %w", err)
+	if isUpdateReviewer {
+		for _, reviewer := range reviewers {
+			err := h.addReviewer(pr, requester, reviewer, taskID)
+			if err != nil {
+				return xerrors.Errorf(": %w", err)
+			}
 		}
 	}
 
