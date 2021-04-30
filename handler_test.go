@@ -11,6 +11,7 @@ import (
 var prEventReviewRequested = &github.PullRequestEvent{
 	Action: pString("review_requested"),
 	PullRequest: &github.PullRequest{
+		State:        pString("open"),
 		Number:       pInt(1),
 		Title:        pString("title"),
 		Body:         pString("task is here:\nhttps://app.asana.com/0/1200243266984258/1200265547631636/f"),
