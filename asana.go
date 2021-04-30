@@ -67,7 +67,7 @@ func AddCodeReviewSubtask(client *asana.Client, taskID string, requester *Accoun
 		Assignee:  reviewer.AsanaUserGID,
 		Followers: []string{requester.AsanaUserGID},
 		TaskBase: asana.TaskBase{
-			Name:      fmt.Sprintf(`✍️ Code review request to %s`, reviewer),
+			Name:      fmt.Sprintf(`✍️ Code review: %s`, reviewer),
 			HTMLNotes: createReviewRequestDescText(requester, pr),
 			DueOn:     &dueDate,
 		},
