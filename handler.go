@@ -13,6 +13,7 @@ const (
 	prEventActionSynchronize            = "synchronize"
 	prEventActionEdited                 = "edited"
 	prEventActionLabeled                = "labeled"
+	prEventActionUnlabeled              = "unlabeled"
 	prEventActionReviewRequested        = "review_requested"
 	prEventActionReviewRequestedRemoved = "review_request_removed"
 )
@@ -96,6 +97,7 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 
 	shouldUpdateReviewerEvent := hasRequestedReviewersFields ||
 		pr.GetAction() == prEventActionLabeled ||
+		pr.GetAction() == prEventActionUnlabeled ||
 		// to update diff numbers.
 		pr.GetAction() == prEventActionSynchronize ||
 		// in case when a reviewer is assigned before an Asana URL is added to the pull request description.
