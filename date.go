@@ -5,7 +5,7 @@ import (
 )
 
 // NextBusinessDay returns next n business day.
-// If n is zero, it returns most recent business day including its day.
+// If n is zero, it returns most recent business day including `base` day.
 func NextBusinessDay(n int, base time.Time, holidays map[string]bool) time.Time {
 	i := 0
 
