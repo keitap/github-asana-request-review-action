@@ -143,7 +143,7 @@ func (h *Handler) addReviewer(pr *github.PullRequestEvent, requester *Account, r
 	if subtask == nil {
 		log.Printf("code review subtask not found. will create one.")
 
-		subtask, err = AddCodeReviewSubtask(h.ac, taskID, requester, reviewer, due, pr)
+		subtask, err = AddCodeReviewSubtask(h.ac, taskID, pr.GetNumber(), requester, reviewer, due, pr)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}

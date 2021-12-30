@@ -150,7 +150,7 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 	taskID := createTask()
 	due := asana.Date(time.Now().AddDate(0, 0, 3))
 
-	_, err = AddCodeReviewSubtask(c, taskID, requester, reviewer, due, pr)
+	_, err = AddCodeReviewSubtask(c, taskID, 123, requester, reviewer, due, pr)
 	require.NoError(t, err)
 }
 
