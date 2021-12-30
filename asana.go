@@ -22,10 +22,10 @@ func parseAsanaTaskLink(text string) (projectID string, taskID string) {
 	return m[1], m[2]
 }
 
-func AddPullRequestCommentToTask(client *asana.Client, taskID string, requester *Account, reviewers []*Account, pr *github.PullRequestEvent) (*asana.Story, error) {
+func AddPullRequestCommentToTask(client *asana.Client, taskID string, requester *Account, pr *github.PullRequestEvent) (*asana.Story, error) {
 	task := &asana.Task{ID: taskID}
 	story := &asana.StoryBase{
-		HTMLText: createPullRequestCommentText(requester, reviewers, pr),
+		HTMLText: createPullRequestCommentText(requester, pr),
 		IsPinned: true,
 	}
 
@@ -51,10 +51,10 @@ func FindTaskComment(client *asana.Client, taskID string, findString string) (*a
 	return nil, nil
 }
 
-func UpdateTaskComment(client *asana.Client, storyID string, requester *Account, reviewers []*Account, pr *github.PullRequestEvent) (*asana.Story, error) {
+func UpdateTaskComment(client *asana.Client, storyID string, requester *Account, pr *github.PullRequestEvent) (*asana.Story, error) {
 	story := &asana.Story{ID: storyID}
 	newStory := &asana.StoryBase{
-		HTMLText: createPullRequestCommentText(requester, reviewers, pr),
+		HTMLText: createPullRequestCommentText(requester, pr),
 		IsPinned: true,
 	}
 
@@ -96,23 +96,16 @@ func FindSubtaskByName(client *asana.Client, taskID string, findString string) (
 	return nil, nil
 }
 
-func createPullRequestCommentText(requester *Account, reviewers []*Account, pr *github.PullRequestEvent) string {
-	users := make([]string, len(reviewers))
-	for i, u := range reviewers {
-		users[i] = u.GetUserPermalink()
-	}
-
+func createPullRequestCommentText(requester *Account, pr *github.PullRequestEvent) string {
 	return fmt.Sprintf(`<body>📋 <code>[<b>%s</b>] <a href="%s">Pull request #%d: %s</a> by %s
 
 <b>%d</b> changed files (<b>+%d -%d</b>)
-Reviewers: %s
 
-by %s
+%s
 </code></body>`,
 		pr.PullRequest.GetState(),
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(), requester.GetUserPermalink(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
-		strings.Join(users, ", "),
 		signature,
 	)
 }

@@ -33,14 +33,6 @@ var (
 		AsanaUserGID: "2540808972045",
 		GitHubLogin:  "keitap",
 	}
-	reviewers = []*Account{
-		reviewer,
-		{
-			Name:         "no_asana_user",
-			AsanaUserGID: "",
-			GitHubLogin:  "no_asana_user",
-		},
-	}
 )
 
 func init() {
@@ -115,7 +107,7 @@ func TestAddPullRequestCommentToTask(t *testing.T) {
 
 	taskID := createTask()
 
-	_, err = AddPullRequestCommentToTask(c, taskID, requester, reviewers, pr)
+	_, err = AddPullRequestCommentToTask(c, taskID, requester, pr)
 	require.NoError(t, err)
 }
 
@@ -145,7 +137,7 @@ func TestUpdateTaskComment(t *testing.T) {
 	pr, err := loadRequestReviewerEvent()
 	require.NoError(t, err)
 
-	_, err = UpdateTaskComment(c, storyID, requester, reviewers, pr)
+	_, err = UpdateTaskComment(c, storyID, requester, pr)
 	require.NoError(t, err)
 }
 

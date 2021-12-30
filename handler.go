@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	prEventActionEdited                 = "edited"
 	prEventActionReviewRequested        = "review_requested"
 	prEventActionReviewRequestedRemoved = "review_request_removed"
 )
@@ -61,16 +62,27 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 
 	log.Printf("requester: %s", requester)
 
+	// add a review description comment to a parent task if not exists.
+	if err := h.updateTask(pr, requester, taskID); err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
 	var ghReviewers []*github.User
 	var reviewers []*Account
 
-	isUpdateReviewer := pr.GetAction() == prEventActionReviewRequested ||
+	hasRequestedReviewersFields := pr.GetAction() == prEventActionReviewRequested ||
 		pr.GetAction() == prEventActionReviewRequestedRemoved
 
-	if isUpdateReviewer {
+	shouldUpdateReviewerEvent := hasRequestedReviewersFields ||
+		pr.GetAction() == prEventActionEdited
+
+	if !shouldUpdateReviewerEvent {
+		return nil
+	}
+
+	if hasRequestedReviewersFields {
 		ghReviewers = pr.PullRequest.RequestedReviewers
 	} else {
-		// handle pr.PullRequest.RequestedReviewers is not set.
 		ghReviewers, err = getRequestedReviewers(h.gh, pr.GetRepo().GetOwner().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber())
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
@@ -88,24 +100,17 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 		log.Printf("reviewer: %s", reviewers[i])
 	}
 
-	// add a review description comment to a parent task if not exists.
-	if err := h.updateTask(pr, requester, reviewers, taskID); err != nil {
-		return xerrors.Errorf(": %w", err)
-	}
-
-	if isUpdateReviewer {
-		for _, reviewer := range reviewers {
-			err := h.addReviewer(pr, requester, reviewer, taskID)
-			if err != nil {
-				return xerrors.Errorf(": %w", err)
-			}
+	for _, reviewer := range reviewers {
+		err := h.addReviewer(pr, requester, reviewer, taskID)
+		if err != nil {
+			return xerrors.Errorf(": %w", err)
 		}
 	}
 
 	return nil
 }
 
-func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, reviewers []*Account, taskID string) error {
+func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, taskID string) error {
 	// add a review description comment to a parent task if not exists.
 	story, err := FindTaskComment(h.ac, taskID, signature)
 	if err != nil {
@@ -113,7 +118,7 @@ func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, re
 	}
 
 	// upsert a review description comment of a parent task.
-	if err := h.upsertPullRequestComment(taskID, story, requester, reviewers, pr); err != nil {
+	if err := h.upsertPullRequestComment(taskID, story, requester, pr); err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
 
@@ -149,15 +154,15 @@ func (h *Handler) addReviewer(pr *github.PullRequestEvent, requester *Account, r
 	return nil
 }
 
-func (h *Handler) upsertPullRequestComment(taskID string, story *asana.Story, requester *Account, reviewers []*Account, pr *github.PullRequestEvent) error {
+func (h *Handler) upsertPullRequestComment(taskID string, story *asana.Story, requester *Account, pr *github.PullRequestEvent) error {
 	if story == nil {
-		if _, err := AddPullRequestCommentToTask(h.ac, taskID, requester, reviewers, pr); err != nil {
+		if _, err := AddPullRequestCommentToTask(h.ac, taskID, requester, pr); err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
 
 		log.Printf("added comment to task: %s", taskID)
 	} else {
-		if _, err := UpdateTaskComment(h.ac, story.ID, requester, reviewers, pr); err != nil {
+		if _, err := UpdateTaskComment(h.ac, story.ID, requester, pr); err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
 
