@@ -10,7 +10,9 @@ import (
 )
 
 const (
+	prEventActionSynchronize            = "synchronize"
 	prEventActionEdited                 = "edited"
+	prEventActionLabeled                = "labeled"
 	prEventActionReviewRequested        = "review_requested"
 	prEventActionReviewRequestedRemoved = "review_request_removed"
 )
@@ -93,6 +95,10 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 		pr.GetAction() == prEventActionReviewRequestedRemoved
 
 	shouldUpdateReviewerEvent := hasRequestedReviewersFields ||
+		pr.GetAction() == prEventActionLabeled ||
+		// to update diff numbers.
+		pr.GetAction() == prEventActionSynchronize ||
+		// in case when a reviewer is assigned before an Asana URL is added to the pull request description.
 		pr.GetAction() == prEventActionEdited
 
 	if !shouldUpdateReviewerEvent {
@@ -122,7 +128,7 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 	}
 
 	for _, reviewer := range reviewers {
-		err := h.addReviewer(pr, requester, reviewer, taskID)
+		err := h.upsertReviewer(pr, requester, reviewer, taskID)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
@@ -131,7 +137,7 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 	return nil
 }
 
-func (h *Handler) addReviewer(pr *github.PullRequestEvent, requester *Account, reviewer *Account, taskID string) error {
+func (h *Handler) upsertReviewer(pr *github.PullRequestEvent, requester *Account, reviewer *Account, taskID string) error {
 	if reviewer.AsanaUserGID == "" {
 		log.Printf("reviewer has no asana account: %s", reviewer.GitHubLogin)
 
@@ -155,6 +161,19 @@ func (h *Handler) addReviewer(pr *github.PullRequestEvent, requester *Account, r
 		}
 
 		log.Printf("added code review subtask to feature task: %s", subtask.ID)
+	} else {
+		update := &asana.UpdateTaskRequest{
+			TaskBase: asana.TaskBase{
+				HTMLNotes: createReviewRequestDescText(requester, pr),
+			},
+		}
+
+		err := subtask.Update(h.ac, update)
+		if err != nil {
+			return xerrors.Errorf(": %w", err)
+		}
+
+		log.Printf("update code review subtask: %s", subtask.ID)
 	}
 
 	return nil

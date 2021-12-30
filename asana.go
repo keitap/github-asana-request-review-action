@@ -3,6 +3,7 @@ package githubasana
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"bitbucket.org/mikehouston/asana-go"
@@ -100,12 +101,14 @@ func createPullRequestCommentText(requester *Account, pr *github.PullRequestEven
 	return fmt.Sprintf(`<body>📋 <code>[<b>%s</b>] <a href="%s">Pull request #%d: %s</a> by %s
 
 <b>%d</b> changed files (<b>+%d -%d</b>)
+%s
 
 %s
 </code></body>`,
 		pr.PullRequest.GetState(),
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(), requester.GetUserPermalink(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
+		getLabelsText(pr),
 		signature,
 	)
 }
@@ -113,12 +116,28 @@ func createPullRequestCommentText(requester *Account, pr *github.PullRequestEven
 func createReviewRequestDescText(requester *Account, pr *github.PullRequestEvent) string {
 	return fmt.Sprintf(`<body><a href="%s">#%d: %s</a> by %s
 
-Could you please review a pull request 🙇
+<b>%d</b> changed files (<b>+%d -%d</b>)
+%s
+
+Could you please review a pull request ❤️
 
 After you finished a code review, pass this assignee back to %s.
 Do not mark complete.
 </body>`,
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(), requester.GetUserPermalink(),
+		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
+		getLabelsText(pr),
 		requester.GetUserPermalink(),
 	)
+}
+
+func getLabelsText(pr *github.PullRequestEvent) string {
+	labels := make([]string, 0)
+	for _, l := range pr.PullRequest.Labels {
+		labels = append(labels, fmt.Sprintf("#%s", l.GetName()))
+	}
+
+	sort.Strings(labels)
+
+	return "Labels: " + strings.Join(labels, ", ")
 }
