@@ -134,7 +134,11 @@ Do not mark complete.
 func getLabelsText(pr *github.PullRequestEvent) string {
 	labels := make([]string, 0)
 	for _, l := range pr.PullRequest.Labels {
-		labels = append(labels, fmt.Sprintf("#%s", l.GetName()))
+		labels = append(labels, fmt.Sprintf("#<b>%s</b>", l.GetName()))
+	}
+
+	if len(labels) == 0 {
+		return ""
 	}
 
 	sort.Strings(labels)
