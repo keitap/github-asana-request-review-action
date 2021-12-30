@@ -127,7 +127,7 @@ func (h *Handler) addReviewer(pr *github.PullRequestEvent, requester *Account, r
 		return nil
 	}
 
-	due := asana.Date(time.Now().AddDate(0, 0, 3))
+	due := asana.Date(NextBusinessDay(h.conf.DueDate, time.Now(), h.conf.Holidays))
 
 	// add a review request task as a subtask if not exists.
 	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
