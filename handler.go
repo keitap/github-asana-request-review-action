@@ -67,6 +67,25 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 		return xerrors.Errorf(": %w", err)
 	}
 
+	return h.updateReviewers(pr, requester, taskID)
+}
+
+func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, taskID string) error {
+	// add a review description comment to a parent task if not exists.
+	story, err := FindTaskComment(h.ac, taskID, signature)
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	// upsert a review description comment of a parent task.
+	if err := h.upsertPullRequestComment(taskID, story, requester, pr); err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	return nil
+}
+
+func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Account, taskID string) error {
 	var ghReviewers []*github.User
 	var reviewers []*Account
 
@@ -83,6 +102,7 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 	if hasRequestedReviewersFields {
 		ghReviewers = pr.PullRequest.RequestedReviewers
 	} else {
+		var err error
 		ghReviewers, err = getRequestedReviewers(h.gh, pr.GetRepo().GetOwner().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber())
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
@@ -92,6 +112,7 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 	reviewers = make([]*Account, len(ghReviewers))
 
 	for i, r := range ghReviewers {
+		var err error
 		reviewers[i], err = h.fetchAccount(r.GetLogin())
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
@@ -105,21 +126,6 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
-	}
-
-	return nil
-}
-
-func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, taskID string) error {
-	// add a review description comment to a parent task if not exists.
-	story, err := FindTaskComment(h.ac, taskID, signature)
-	if err != nil {
-		return xerrors.Errorf(": %w", err)
-	}
-
-	// upsert a review description comment of a parent task.
-	if err := h.upsertPullRequestComment(taskID, story, requester, pr); err != nil {
-		return xerrors.Errorf(": %w", err)
 	}
 
 	return nil
