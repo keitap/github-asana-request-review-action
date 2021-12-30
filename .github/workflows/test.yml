@@ -7,6 +7,8 @@ on:
       - closed
       - reopened
       - synchronize
+      - edited
+      - labeled
       - review_requested
       - review_request_removed
   pull_request_review:
