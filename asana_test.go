@@ -33,14 +33,6 @@ var (
 		AsanaUserGID: "2540808972045",
 		GitHubLogin:  "keitap",
 	}
-	reviewers = []*Account{
-		reviewer,
-		{
-			Name:         "no_asana_user",
-			AsanaUserGID: "",
-			GitHubLogin:  "no_asana_user",
-		},
-	}
 )
 
 func init() {
@@ -110,12 +102,11 @@ func TestParseAsanaTaskLink(t *testing.T) {
 func TestAddPullRequestCommentToTask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
-	require.NoError(t, err)
+	pr := loadRequestReviewRequestedEvent()
 
 	taskID := createTask()
 
-	_, err = AddPullRequestCommentToTask(c, taskID, requester, reviewers, pr)
+	_, err := AddPullRequestCommentToTask(c, taskID, requester, pr)
 	require.NoError(t, err)
 }
 
@@ -142,31 +133,40 @@ func TestFindTaskComment(t *testing.T) {
 func TestUpdateTaskComment(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
-	require.NoError(t, err)
+	pr := loadRequestReviewRequestedEvent()
 
-	_, err = UpdateTaskComment(c, storyID, requester, reviewers, pr)
+	_, err := UpdateTaskComment(c, storyID, requester, pr)
 	require.NoError(t, err)
 }
 
-func TestAddCodeReviewSubtask(t *testing.T) {
+func TestCodeReviewSubtask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
-	require.NoError(t, err)
+	var subtask *asana.Task
 
-	taskID := createTask()
-	due := asana.Date(time.Now().AddDate(0, 0, 3))
+	t.Run("AddCodeReviewSubtask", func(t *testing.T) {
+		pr := loadRequestReviewRequestedEvent()
 
-	_, err = AddCodeReviewSubtask(c, taskID, requester, reviewer, due, pr)
-	require.NoError(t, err)
+		taskID := createTask()
+		due := asana.Date(time.Now().AddDate(0, 0, 3))
+
+		var err error
+		subtask, err = AddCodeReviewSubtask(c, taskID, 123, requester, reviewer, due, pr)
+		require.NoError(t, err)
+	})
+
+	t.Run("AddCodeReviewSubtaskComment", func(t *testing.T) {
+		pr := loadRequestReviewSubmittedEvent()
+
+		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr)
+		require.NoError(t, err)
+	})
 }
 
 func TestFindSubtaskByName(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
-	require.NoError(t, err)
+	pr := loadRequestReviewRequestedEvent()
 
 	githubReviewerLogin := pr.PullRequest.RequestedReviewers[0].GetLogin()
 

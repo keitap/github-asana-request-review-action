@@ -17,6 +17,7 @@ func TestLoadConfig(t *testing.T) {
 	c, err := LoadConfig(data)
 	require.NoError(t, err)
 
+	assert.Equal(t, 1, c.DueDate)
 	assert.Equal(t, "123", c.Accounts["user1"])
 	assert.Equal(t, "456", c.Accounts["user2"])
 	assert.Equal(t, "789", c.Accounts["user3"])
