@@ -294,7 +294,26 @@
     "html_url": "https://github.com/keitap/github-actions-test/pull/1",
     "id": 622623313,
     "issue_url": "https://api.github.com/repos/keitap/github-actions-test/issues/1",
-    "labels": [],
+    "labels": [
+      {
+        "color": "a2eeef",
+        "default": true,
+        "description": "New feature or request",
+        "id": 2943955260,
+        "name": "enhancement",
+        "node_id": "MDU6TGFiZWwyOTQzOTU1MjYw",
+        "url": "https://api.github.com/repos/keitap/github-actions-test/labels/enhancement"
+      },
+      {
+        "color": "7057ff",
+        "default": true,
+        "description": "Good for newcomers",
+        "id": 2943955268,
+        "name": "good first issue",
+        "node_id": "MDU6TGFiZWwyOTQzOTU1MjY4",
+        "url": "https://api.github.com/repos/keitap/github-actions-test/labels/good%20first%20issue"
+      }
+    ],
     "locked": false,
     "maintainer_can_modify": false,
     "merge_commit_sha": "0671caab3be5f2839be8ca735a1feeb300b66cf6",
