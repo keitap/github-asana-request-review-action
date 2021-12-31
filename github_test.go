@@ -22,14 +22,19 @@ func loadTestdata(filepath string) (name string, payload []byte) {
 	return s[0], payload
 }
 
-func loadRequestReviewerEvent() (*github.PullRequestEvent, error) {
+func loadRequestReviewRequestedEvent() (*github.PullRequestEvent, error) {
 	name, payload := loadTestdata("testdata/pull_request-review_requested.json")
 
-	return parseRequestReviewerEvent(name, payload)
+	event, err := github.ParseWebHook(name, payload)
+	if err != nil {
+		panic(err)
+	}
+
+	return event.(*github.PullRequestEvent), nil
 }
 
 func TestParseRequestReviewerEvent(t *testing.T) {
-	e, err := loadRequestReviewerEvent()
+	e, err := loadRequestReviewRequestedEvent()
 	require.NoError(t, err)
 
 	assert.Equal(t, "keitap-2nd", e.PullRequest.RequestedReviewers[0].GetLogin())

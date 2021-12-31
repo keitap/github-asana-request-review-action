@@ -102,7 +102,7 @@ func TestParseAsanaTaskLink(t *testing.T) {
 func TestAddPullRequestCommentToTask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
+	pr, err := loadRequestReviewRequestedEvent()
 	require.NoError(t, err)
 
 	taskID := createTask()
@@ -134,7 +134,7 @@ func TestFindTaskComment(t *testing.T) {
 func TestUpdateTaskComment(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
+	pr, err := loadRequestReviewRequestedEvent()
 	require.NoError(t, err)
 
 	_, err = UpdateTaskComment(c, storyID, requester, pr)
@@ -144,7 +144,7 @@ func TestUpdateTaskComment(t *testing.T) {
 func TestAddCodeReviewSubtask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
+	pr, err := loadRequestReviewRequestedEvent()
 	require.NoError(t, err)
 
 	taskID := createTask()
@@ -157,7 +157,7 @@ func TestAddCodeReviewSubtask(t *testing.T) {
 func TestFindSubtaskByName(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewerEvent()
+	pr, err := loadRequestReviewRequestedEvent()
 	require.NoError(t, err)
 
 	githubReviewerLogin := pr.PullRequest.RequestedReviewers[0].GetLogin()
