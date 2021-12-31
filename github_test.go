@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/go-github/v35/github"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func loadTestdata(filepath string) (name string, payload []byte) {
@@ -22,7 +21,7 @@ func loadTestdata(filepath string) (name string, payload []byte) {
 	return s[0], payload
 }
 
-func loadRequestReviewRequestedEvent() (*github.PullRequestEvent, error) {
+func loadRequestReviewRequestedEvent() *github.PullRequestEvent {
 	name, payload := loadTestdata("testdata/pull_request-review_requested.json")
 
 	event, err := github.ParseWebHook(name, payload)
@@ -30,10 +29,10 @@ func loadRequestReviewRequestedEvent() (*github.PullRequestEvent, error) {
 		panic(err)
 	}
 
-	return event.(*github.PullRequestEvent), nil
+	return event.(*github.PullRequestEvent)
 }
 
-func loadRequestReviewSubmittedEvent() (*github.PullRequestReviewEvent, error) {
+func loadRequestReviewSubmittedEvent() *github.PullRequestReviewEvent {
 	name, payload := loadTestdata("testdata/pull_request_review-submitted-approved.json")
 
 	event, err := github.ParseWebHook(name, payload)
@@ -41,12 +40,11 @@ func loadRequestReviewSubmittedEvent() (*github.PullRequestReviewEvent, error) {
 		panic(err)
 	}
 
-	return event.(*github.PullRequestReviewEvent), nil
+	return event.(*github.PullRequestReviewEvent)
 }
 
 func TestParseRequestReviewerEvent(t *testing.T) {
-	e, err := loadRequestReviewRequestedEvent()
-	require.NoError(t, err)
+	e := loadRequestReviewRequestedEvent()
 
 	assert.Equal(t, "keitap-2nd", e.PullRequest.RequestedReviewers[0].GetLogin())
 }

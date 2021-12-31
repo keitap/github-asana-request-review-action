@@ -102,12 +102,11 @@ func TestParseAsanaTaskLink(t *testing.T) {
 func TestAddPullRequestCommentToTask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewRequestedEvent()
-	require.NoError(t, err)
+	pr := loadRequestReviewRequestedEvent()
 
 	taskID := createTask()
 
-	_, err = AddPullRequestCommentToTask(c, taskID, requester, pr)
+	_, err := AddPullRequestCommentToTask(c, taskID, requester, pr)
 	require.NoError(t, err)
 }
 
@@ -134,10 +133,9 @@ func TestFindTaskComment(t *testing.T) {
 func TestUpdateTaskComment(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewRequestedEvent()
-	require.NoError(t, err)
+	pr := loadRequestReviewRequestedEvent()
 
-	_, err = UpdateTaskComment(c, storyID, requester, pr)
+	_, err := UpdateTaskComment(c, storyID, requester, pr)
 	require.NoError(t, err)
 }
 
@@ -147,21 +145,20 @@ func TestCodeReviewSubtask(t *testing.T) {
 	var subtask *asana.Task
 
 	t.Run("AddCodeReviewSubtask", func(t *testing.T) {
-		pr, err := loadRequestReviewRequestedEvent()
-		require.NoError(t, err)
+		pr := loadRequestReviewRequestedEvent()
 
 		taskID := createTask()
 		due := asana.Date(time.Now().AddDate(0, 0, 3))
 
+		var err error
 		subtask, err = AddCodeReviewSubtask(c, taskID, 123, requester, reviewer, due, pr)
 		require.NoError(t, err)
 	})
 
 	t.Run("AddCodeReviewSubtaskComment", func(t *testing.T) {
-		pr, err := loadRequestReviewSubmittedEvent()
-		require.NoError(t, err)
+		pr := loadRequestReviewSubmittedEvent()
 
-		_, err = AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr)
+		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr)
 		require.NoError(t, err)
 	})
 }
@@ -169,8 +166,7 @@ func TestCodeReviewSubtask(t *testing.T) {
 func TestFindSubtaskByName(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewRequestedEvent()
-	require.NoError(t, err)
+	pr := loadRequestReviewRequestedEvent()
 
 	githubReviewerLogin := pr.PullRequest.RequestedReviewers[0].GetLogin()
 
