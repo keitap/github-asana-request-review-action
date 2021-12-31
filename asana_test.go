@@ -141,17 +141,29 @@ func TestUpdateTaskComment(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestAddCodeReviewSubtask(t *testing.T) {
+func TestCodeReviewSubtask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
-	pr, err := loadRequestReviewRequestedEvent()
-	require.NoError(t, err)
+	var subtask *asana.Task
 
-	taskID := createTask()
-	due := asana.Date(time.Now().AddDate(0, 0, 3))
+	t.Run("AddCodeReviewSubtask", func(t *testing.T) {
+		pr, err := loadRequestReviewRequestedEvent()
+		require.NoError(t, err)
 
-	_, err = AddCodeReviewSubtask(c, taskID, 123, requester, reviewer, due, pr)
-	require.NoError(t, err)
+		taskID := createTask()
+		due := asana.Date(time.Now().AddDate(0, 0, 3))
+
+		subtask, err = AddCodeReviewSubtask(c, taskID, 123, requester, reviewer, due, pr)
+		require.NoError(t, err)
+	})
+
+	t.Run("AddCodeReviewSubtaskComment", func(t *testing.T) {
+		pr, err := loadRequestReviewSubmittedEvent()
+		require.NoError(t, err)
+
+		_, err = AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr)
+		require.NoError(t, err)
+	})
 }
 
 func TestFindSubtaskByName(t *testing.T) {

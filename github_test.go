@@ -33,6 +33,17 @@ func loadRequestReviewRequestedEvent() (*github.PullRequestEvent, error) {
 	return event.(*github.PullRequestEvent), nil
 }
 
+func loadRequestReviewSubmittedEvent() (*github.PullRequestReviewEvent, error) {
+	name, payload := loadTestdata("testdata/pull_request_review-submitted-approved.json")
+
+	event, err := github.ParseWebHook(name, payload)
+	if err != nil {
+		panic(err)
+	}
+
+	return event.(*github.PullRequestReviewEvent), nil
+}
+
 func TestParseRequestReviewerEvent(t *testing.T) {
 	e, err := loadRequestReviewRequestedEvent()
 	require.NoError(t, err)

@@ -77,6 +77,16 @@ func AddCodeReviewSubtask(client *asana.Client, taskID string, prID int, request
 	return client.CreateTask(req)
 }
 
+func UpdateCodeReviewSubtask(client *asana.Client, subtask *asana.Task, requester *Account, pr *github.PullRequestEvent) error {
+	update := &asana.UpdateTaskRequest{
+		TaskBase: asana.TaskBase{
+			HTMLNotes: createReviewRequestDescText(requester, pr),
+		},
+	}
+
+	return subtask.Update(client, update)
+}
+
 // FindSubtaskByName finds a subtask which contains specified string.
 func FindSubtaskByName(client *asana.Client, taskID string, findString string) (*asana.Task, error) {
 	task := &asana.Task{ID: taskID}
@@ -95,6 +105,36 @@ func FindSubtaskByName(client *asana.Client, taskID string, findString string) (
 	}
 
 	return nil, nil
+}
+
+func AddCodeReviewSubtaskComment(client *asana.Client, subtask *asana.Task, requester *Account, reviewer *Account, pr *github.PullRequestReviewEvent) (*asana.Story, error) {
+	state := ""
+	switch pr.Review.GetState() {
+	case "approved":
+		state = "✅ Approved"
+	case "commented":
+		state = "💬 Commented"
+	case "changes_requested":
+		state = "❗️ Changes Requested"
+	}
+
+	story, err := subtask.CreateComment(client, &asana.StoryBase{
+		HTMLText: fmt.Sprintf(`<body><a href="%s"><b>%s</b></a>: reviewed by %s</body>`,
+			pr.Review.GetHTMLURL(), state, reviewer.GetUserPermalink()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// reassign to requester.
+	err = subtask.Update(client, &asana.UpdateTaskRequest{
+		Assignee: requester.AsanaUserGID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return story, nil
 }
 
 func createPullRequestCommentText(requester *Account, pr *github.PullRequestEvent) string {
@@ -120,14 +160,10 @@ func createReviewRequestDescText(requester *Account, pr *github.PullRequestEvent
 %s
 
 Could you please review a pull request ❤️
-
-After you finished a code review, pass this assignee back to %s.
-Do not mark complete.
 </body>`,
 		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(), requester.GetUserPermalink(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
 		getLabelsText(pr),
-		requester.GetUserPermalink(),
 	)
 }
 

@@ -41,6 +41,8 @@ func (h *Handler) Handle(eventName string, eventPayload []byte) error {
 	switch e := event.(type) {
 	case *github.PullRequestEvent:
 		return h.handlePullRequestEvent(e)
+	case *github.PullRequestReviewEvent:
+		return h.handlePullRequestReviewEvent(e)
 	default:
 		log.Println("unknown event: " + eventName)
 	}
@@ -164,13 +166,7 @@ func (h *Handler) upsertReviewer(pr *github.PullRequestEvent, requester *Account
 
 		log.Printf("added code review subtask to feature task: %s", subtask.ID)
 	} else {
-		update := &asana.UpdateTaskRequest{
-			TaskBase: asana.TaskBase{
-				HTMLNotes: createReviewRequestDescText(requester, pr),
-			},
-		}
-
-		err := subtask.Update(h.ac, update)
+		err := UpdateCodeReviewSubtask(h.ac, subtask, requester, pr)
 		if err != nil {
 			return xerrors.Errorf(": %w", err)
 		}
@@ -212,4 +208,43 @@ func (h *Handler) fetchAccount(githubLogin string) (*Account, error) {
 	}
 
 	return a, nil
+}
+
+func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent) error {
+	projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
+	if projectID == "" || taskID == "" {
+		log.Println("asana task url not found in description.")
+
+		return nil
+	}
+
+	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	reviewer, err := h.fetchAccount(pr.Review.User.GetLogin())
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	if subtask == nil {
+		log.Printf("review subtask is not found.")
+
+		return nil
+	}
+
+	_, err = AddCodeReviewSubtaskComment(h.ac, subtask, requester, reviewer, pr)
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	log.Printf("review is submitted by reviewer: %s state: %s", reviewer.Name, pr.Review.GetState())
+
+	return nil
 }
