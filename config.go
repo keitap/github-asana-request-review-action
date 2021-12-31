@@ -1,9 +1,7 @@
 // Package githubasana provides GitHub and Asana pull request task integration.
 package githubasana
 
-import (
-	"gopkg.in/yaml.v2"
-)
+import "gopkg.in/yaml.v2"
 
 type (
 	GithubLogin = string
@@ -11,8 +9,8 @@ type (
 )
 
 type Config struct {
-	DueDate  int
-	Holidays map[string]bool
+	DueDate  int                      `yaml:"due_date"`
+	Holidays map[string]bool          `yaml:"holidays"`
 	Accounts map[GithubLogin]AsanaGID `yaml:"accounts"`
 }
 
