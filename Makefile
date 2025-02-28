@@ -1,4 +1,8 @@
-DOCKER_REPOSITORY = ghcr.io/keitap/github-asana-request-review-action:1.1.2
+DOCKER_REPOSITORY = ghcr.io/keitap/github-asana-request-review-action:1.1.3
+
+.PHONY: test
+test:
+	go test ./...
 
 .PHONY: build
 build:

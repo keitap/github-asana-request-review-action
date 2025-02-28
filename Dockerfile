@@ -1,10 +1,10 @@
-FROM golang:1.17 as builder
+FROM golang:1.24 as builder
 
 WORKDIR /go/src/app
 COPY . .
 RUN go build -o action ./cmd
 
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/base-debian12
 
 LABEL org.opencontainers.image.source https://github.com/keitap/github-asana-request-review-action
 
