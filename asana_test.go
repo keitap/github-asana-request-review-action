@@ -66,33 +66,59 @@ func createTask() string {
 
 func TestParseAsanaTaskLink(t *testing.T) {
 	tests := []struct {
-		name      string
-		text      string
-		projectID string
-		taskID    string
+		name        string
+		text        string
+		workspaceID string
+		projectID   string
+		taskID      string
 	}{
 		{
-			name:      `full screen URL`,
-			text:      `Here is the Asana task URL that you should read before doing code review.\r\nhttps://app.asana.com/0/364167036366785/1162650948650897/f\r\n`,
-			projectID: `364167036366785`,
-			taskID:    `1162650948650897`,
+			name:        `v0 full screen URL`,
+			text:        `Here is the Asana task URL that you should read before doing code review.\r\nhttps://app.asana.com/0/364167036366785/1162650948650897/f\r\n`,
+			workspaceID: ``,
+			projectID:   `364167036366785`,
+			taskID:      `1162650948650897`,
 		},
 		{
-			name:      `no full screen URL`,
-			text:      `Task URL: https://app.asana.com/0/364167036366785/1162650948650897`,
-			projectID: `364167036366785`,
-			taskID:    `1162650948650897`,
+			name:        `v0 no full screen URL`,
+			text:        `Task URL: https://app.asana.com/0/364167036366785/1162650948650897`,
+			workspaceID: ``,
+			projectID:   `364167036366785`,
+			taskID:      `1162650948650897`,
 		},
 		{
-			name:      `No task URL`,
-			text:      `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
-			projectID: ``,
-			taskID:    ``,
+			name:        `v1 URL without projectID`,
+			text:        `Here is the Asana task URL that you should read before doing code review.\r\nhttps://app.asana.com/1/5590853349337/task/1209347772587937?focus=true\r\n`,
+			workspaceID: `5590853349337`,
+			projectID:   ``,
+			taskID:      `1209347772587937`,
+		},
+		{
+			name:        `v1 URL without projectID no query`,
+			text:        `Here is the Asana task URL that you should read before doing code review.\r\nhttps://app.asana.com/1/5590853215187/task/1162650948650897\r\n`,
+			workspaceID: `5590853215187`,
+			projectID:   ``,
+			taskID:      `1162650948650897`,
+		},
+		{
+			name:        `v1 URL with projectID`,
+			text:        `Task URL: https://app.asana.com/1/5590853215187/project/364167036366785/task/1162650948650897?focus=true`,
+			workspaceID: `5590853215187`,
+			projectID:   ``,
+			taskID:      `1162650948650897`,
+		},
+		{
+			name:        `No task URL`,
+			text:        `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
+			workspaceID: ``,
+			projectID:   ``,
+			taskID:      ``,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			projectID, taskID := parseAsanaTaskLink(test.text)
+			workspaceID, projectID, taskID := parseAsanaTaskLink(test.text)
+			assert.Equal(t, test.workspaceID, workspaceID)
 			assert.Equal(t, test.projectID, projectID)
 			assert.Equal(t, test.taskID, taskID)
 		})

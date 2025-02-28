@@ -51,14 +51,18 @@ func (h *Handler) Handle(eventName string, eventPayload []byte) error {
 }
 
 func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
-	projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
-	if projectID == "" || taskID == "" {
+	workspaceID, projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
+	if taskID == "" {
 		log.Println("asana task url not found in description.")
 
 		return nil
 	}
 
-	log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
+	if projectID != "" {
+		log.Printf("asana: https://app.asana.com/0/%s/%s", projectID, taskID)
+	} else {
+		log.Printf("asana: https://app.asana.com/1/%s/task/%s?focus=true", workspaceID, taskID)
+	}
 
 	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
 	if err != nil {
@@ -211,8 +215,8 @@ func (h *Handler) fetchAccount(githubLogin string) (*Account, error) {
 }
 
 func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent) error {
-	projectID, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
-	if projectID == "" || taskID == "" {
+	_, _, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
+	if taskID == "" {
 		log.Println("asana task url not found in description.")
 
 		return nil

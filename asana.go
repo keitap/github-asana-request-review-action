@@ -14,13 +14,20 @@ const signature = "#github-asana-request-review"
 
 var taskURLMatcher = regexp.MustCompile(`https://app.asana.com/0/(\d+)/(\d+)`)
 
-func parseAsanaTaskLink(text string) (projectID string, taskID string) {
-	m := taskURLMatcher.FindStringSubmatch(text)
-	if len(m) == 0 {
-		return "", ""
+func parseAsanaTaskLink(text string) (workspaceID string, projectID string, taskID string) {
+	v1 := regexp.MustCompile(`https://app\.asana\.com/1/(\d+)/(?:task/|project/\d+/task/)(\d+)`)
+	m := v1.FindStringSubmatch(text)
+
+	if 0 < len(m) {
+		return m[1], "", m[2]
 	}
 
-	return m[1], m[2]
+	m = taskURLMatcher.FindStringSubmatch(text)
+	if 0 < len(m) {
+		return "", m[1], m[2]
+	}
+
+	return "", "", ""
 }
 
 func AddPullRequestCommentToTask(client *asana.Client, taskID string, requester *Account, pr *github.PullRequestEvent) (*asana.Story, error) {
