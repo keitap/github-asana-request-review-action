@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	projectID                 = "1200243266984258"
-	storyID                   = "1200243344965037"
-	emptyTaskID               = "1200243266984265"
-	hasSignatureCommentTaskID = "1200243266984263"
-	hasSubtaskTaskID          = "1200243529563651"
+	projectID                 = "1200261405938356"
+	storyID                   = "1209537017377484"
+	emptyTaskID               = "1209536608330908"
+	hasSignatureCommentTaskID = "1209536608330906"
+	hasSubtaskTaskID          = "1209536608330912"
 )
 
 var (
