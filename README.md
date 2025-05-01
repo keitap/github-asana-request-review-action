@@ -13,3 +13,9 @@ When a reviewer is assigned on GitHub, creates a review subtask on an Asana task
 - After assigned someone as code reviewer on the pull request.
 ![](./res/feature_task_assigned.png)
 ![](./res/codereview_subtask.png)
+
+# More details
+
+For more details on this repository, please check out DeepWiki:
+
+https://deepwiki.com/keitap/github-asana-request-review-action

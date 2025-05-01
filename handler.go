@@ -214,7 +214,7 @@ func (h *Handler) fetchAccount(githubLogin string) (*Account, error) {
 	return a, nil
 }
 
-func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent) error {
+func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent) (err error) {
 	_, _, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
 	if taskID == "" {
 		log.Println("asana task url not found in description.")
@@ -222,7 +222,7 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 		return nil
 	}
 
-	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
+	requester, err := h.getAssigneeOrRequester(pr)
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
@@ -251,4 +251,25 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 	log.Printf("review is submitted by reviewer: %s state: %s", reviewer.Name, pr.Review.GetState())
 
 	return nil
+}
+
+// getAssigneeOrRequester retrieves the assignee or requester for the given pull request review event.
+// If the pull request user is a bot and an assignee exists, it fetches the assignee account.
+// Otherwise, it fetches the account of the pull request's user. Returns the account or an error if fetching fails.
+func (h *Handler) getAssigneeOrRequester(pr *github.PullRequestReviewEvent) (requester *Account, err error) {
+	if pr.PullRequest.User.GetType() == "Bot" && pr.PullRequest.Assignee != nil {
+		requester, err = h.fetchAccount(pr.PullRequest.Assignee.GetLogin())
+		if err != nil {
+			return nil, xerrors.Errorf(": %w", err)
+		}
+
+		return requester, nil
+	}
+
+	requester, err = h.fetchAccount(pr.PullRequest.User.GetLogin())
+	if err != nil {
+		return nil, xerrors.Errorf(": %w", err)
+	}
+
+	return requester, nil
 }
