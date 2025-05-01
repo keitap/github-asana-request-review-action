@@ -2,21 +2,18 @@ run:
   timeout: 5m
 
 output:
-  format: tab
+  formats: tab
   sort-results: true
 
 linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
-    - depguard
     - dupl
     - errcheck
     - exhaustive
     - durationcheck
     - errorlint
-    - exportloopref
     - forbidigo
     - funlen
     - goconst
@@ -40,13 +37,11 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
 issues:
