@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v71/github"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,4 +68,53 @@ func TestHandler_handlePullRequestEvent_NoConfig(t *testing.T) {
 
 	err := h.handlePullRequestEvent(prEventReviewRequested)
 	require.NoError(t, err)
+}
+
+func TestHandler_getAssigneeOrRequester(t *testing.T) {
+	conf := &Config{
+		Accounts: map[GithubLogin]AsanaGID{
+			"keitap":     "5590853215184",
+			"keitap-2nd": "2540808972045",
+		},
+	}
+
+	ac := asana.NewClientWithAccessToken(asanaToken)
+	gh := github.NewClient(nil)
+
+	h := NewHandler(conf, ac, gh)
+
+	t.Run("PR with assignee", func(t *testing.T) {
+		prEvent := &github.PullRequestReviewEvent{
+			PullRequest: &github.PullRequest{
+				User: &github.User{
+					Login: pString("bot"),
+					Type:  pString("Bot"),
+				},
+				Assignee: &github.User{
+					Login: pString("keitap-2nd"),
+				},
+			},
+		}
+
+		requester, err := h.getAssigneeOrRequester(prEvent)
+		require.NoError(t, err)
+		require.NotNil(t, requester)
+		require.Equal(t, "keitap-2nd", requester.GitHubLogin)
+	})
+
+	t.Run("PR without assignee", func(t *testing.T) {
+		prEvent := &github.PullRequestReviewEvent{
+			PullRequest: &github.PullRequest{
+				User: &github.User{
+					Login: pString("keitap"),
+				},
+				Assignee: nil,
+			},
+		}
+
+		requester, err := h.getAssigneeOrRequester(prEvent)
+		require.NoError(t, err)
+		require.NotNil(t, requester)
+		require.Equal(t, "keitap", requester.GitHubLogin)
+	})
 }

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v71/github"
 )
 
 const signature = "#github-asana-request-review"

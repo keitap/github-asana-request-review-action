@@ -1,12 +1,12 @@
 package githubasana
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v35/github"
-	"golang.org/x/xerrors"
+	"github.com/google/go-github/v71/github"
 )
 
 const (
@@ -35,7 +35,7 @@ func NewHandler(conf *Config, asanaClient *asana.Client, githubClient *github.Cl
 func (h *Handler) Handle(eventName string, eventPayload []byte) error {
 	event, err := github.ParseWebHook(eventName, eventPayload)
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	switch e := event.(type) {
@@ -66,14 +66,14 @@ func (h *Handler) handlePullRequestEvent(pr *github.PullRequestEvent) error {
 
 	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	log.Printf("requester: %s", requester)
 
 	// add a review description comment to a parent task if not exists.
 	if err := h.updateTask(pr, requester, taskID); err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	return h.updateReviewers(pr, requester, taskID)
@@ -83,12 +83,12 @@ func (h *Handler) updateTask(pr *github.PullRequestEvent, requester *Account, ta
 	// add a review description comment to a parent task if not exists.
 	story, err := FindTaskComment(h.ac, taskID, signature)
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	// upsert a review description comment of a parent task.
 	if err := h.upsertPullRequestComment(taskID, story, requester, pr); err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	return nil
@@ -119,7 +119,7 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 		var err error
 		ghReviewers, err = getRequestedReviewers(h.gh, pr.GetRepo().GetOwner().GetLogin(), pr.GetRepo().GetName(), pr.GetNumber())
 		if err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 	}
 
@@ -129,7 +129,7 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 		var err error
 		reviewers[i], err = h.fetchAccount(r.GetLogin())
 		if err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 
 		log.Printf("reviewer: %s", reviewers[i])
@@ -138,7 +138,7 @@ func (h *Handler) updateReviewers(pr *github.PullRequestEvent, requester *Accoun
 	for _, reviewer := range reviewers {
 		err := h.upsertReviewer(pr, requester, reviewer, taskID)
 		if err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 	}
 
@@ -157,7 +157,7 @@ func (h *Handler) upsertReviewer(pr *github.PullRequestEvent, requester *Account
 	// add a review request task as a subtask if not exists.
 	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	if subtask == nil {
@@ -165,14 +165,14 @@ func (h *Handler) upsertReviewer(pr *github.PullRequestEvent, requester *Account
 
 		subtask, err = AddCodeReviewSubtask(h.ac, taskID, pr.GetNumber(), requester, reviewer, due, pr)
 		if err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 
 		log.Printf("added code review subtask to feature task: %s", subtask.ID)
 	} else {
 		err := UpdateCodeReviewSubtask(h.ac, subtask, requester, pr)
 		if err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 
 		log.Printf("update code review subtask: %s", subtask.ID)
@@ -184,13 +184,13 @@ func (h *Handler) upsertReviewer(pr *github.PullRequestEvent, requester *Account
 func (h *Handler) upsertPullRequestComment(taskID string, story *asana.Story, requester *Account, pr *github.PullRequestEvent) error {
 	if story == nil {
 		if _, err := AddPullRequestCommentToTask(h.ac, taskID, requester, pr); err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 
 		log.Printf("added comment to task: %s", taskID)
 	} else {
 		if _, err := UpdateTaskComment(h.ac, story.ID, requester, pr); err != nil {
-			return xerrors.Errorf(": %w", err)
+			return fmt.Errorf(": %w", err)
 		}
 
 		log.Printf("updated comment on task: %s %s", taskID, story.ID)
@@ -214,7 +214,7 @@ func (h *Handler) fetchAccount(githubLogin string) (*Account, error) {
 	return a, nil
 }
 
-func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent) error {
+func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent) (err error) {
 	_, _, taskID := parseAsanaTaskLink(pr.PullRequest.GetBody())
 	if taskID == "" {
 		log.Println("asana task url not found in description.")
@@ -222,19 +222,19 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 		return nil
 	}
 
-	requester, err := h.fetchAccount(pr.PullRequest.User.GetLogin())
+	requester, err := h.getAssigneeOrRequester(pr)
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	reviewer, err := h.fetchAccount(pr.Review.User.GetLogin())
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	if subtask == nil {
@@ -245,10 +245,31 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 
 	_, err = AddCodeReviewSubtaskComment(h.ac, subtask, requester, reviewer, pr)
 	if err != nil {
-		return xerrors.Errorf(": %w", err)
+		return fmt.Errorf(": %w", err)
 	}
 
 	log.Printf("review is submitted by reviewer: %s state: %s", reviewer.Name, pr.Review.GetState())
 
 	return nil
+}
+
+// getAssigneeOrRequester retrieves the assignee or requester for the given pull request review event.
+// If the pull request user is a bot and an assignee exists, it fetches the assignee account.
+// Otherwise, it fetches the account of the pull request's user. Returns the account or an error if fetching fails.
+func (h *Handler) getAssigneeOrRequester(pr *github.PullRequestReviewEvent) (requester *Account, err error) {
+	if pr.PullRequest.User.GetType() == "Bot" && pr.PullRequest.Assignee != nil {
+		requester, err = h.fetchAccount(pr.PullRequest.Assignee.GetLogin())
+		if err != nil {
+			return nil, fmt.Errorf(": %w", err)
+		}
+
+		return requester, nil
+	}
+
+	requester, err = h.fetchAccount(pr.PullRequest.User.GetLogin())
+	if err != nil {
+		return nil, fmt.Errorf(": %w", err)
+	}
+
+	return requester, nil
 }
