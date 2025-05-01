@@ -3,7 +3,7 @@ package githubasana
 import (
 	"context"
 
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v71/github"
 	"golang.org/x/xerrors"
 )
 

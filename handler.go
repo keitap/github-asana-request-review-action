@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v71/github"
 	"golang.org/x/xerrors"
 )
 

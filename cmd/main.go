@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v71/github"
 	githubasana "github.com/keitap/github-asana-request-review-action"
 	"golang.org/x/oauth2"
 )

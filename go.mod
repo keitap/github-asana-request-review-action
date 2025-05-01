@@ -6,7 +6,7 @@ replace bitbucket.org/mikehouston/asana-go => github.com/keitap/asana-go v0.0.0-
 
 require (
 	bitbucket.org/mikehouston/asana-go v0.0.0-20250102231814-14e44a300f0b
-	github.com/google/go-github/v35 v35.3.0
+	github.com/google/go-github/v71 v71.0.0
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/oauth2 v0.27.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
@@ -20,5 +20,4 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	golang.org/x/crypto v0.35.0 // indirect
 )
