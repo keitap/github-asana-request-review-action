@@ -111,3 +111,7 @@ To build the action locally, you will need Go installed. You can run the tests w
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+---
+
+_This README was created by Jules._
