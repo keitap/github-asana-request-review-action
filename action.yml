@@ -8,7 +8,7 @@ inputs:
     default: '.github/github-asana-request-review.yml'
 runs:
   using: 'docker'
-  image: 'docker://ghcr.io/keitap/github-asana-request-review-action:1.1.4'
+  image: 'docker://ghcr.io/keitap/github-asana-request-review-action:1.1.5'
 branding:
   icon: 'refresh-cw'
   color: 'gray-dark'
