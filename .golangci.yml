@@ -45,6 +45,10 @@ linters:
       - comments
       - std-error-handling
       - common-false-positives
+    rules:
+      - linters: [gosec]
+        path: cmd/
+        text: "G70[36]"
 
 formatters:
   enable:

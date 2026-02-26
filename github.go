@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v74/github"
 )
 
 func getRequestedReviewers(gh *github.Client, owner string, repo string, number int) ([]*github.User, error) {

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v74/github"
 )
 
 const signature = "#github-asana-request-review"
@@ -212,7 +212,7 @@ Could you please review a pull request ❤️
 }
 
 func getLabelsText(pr *github.PullRequestEvent) string {
-	labels := make([]string, 0)
+	labels := make([]string, 0, len(pr.PullRequest.Labels))
 	for _, l := range pr.PullRequest.Labels {
 		labels = append(labels, fmt.Sprintf("#<b>%s</b>", l.GetName()))
 	}
