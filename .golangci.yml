@@ -1,12 +1,15 @@
+version: "2"
+
 run:
   timeout: 5m
 
 output:
-  formats: tab
-  sort-results: true
+  formats:
+    tab:
+      path: stdout
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - dupl
@@ -19,13 +22,11 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - gofumpt
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
+    - intrange
     - makezero
     - misspell
     - nakedret
@@ -34,17 +35,26 @@ linters:
     - noctx
     - nolintlint
     - prealloc
-    - rowserrcheck
-    - sqlclosecheck
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
+  exclusions:
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+    rules:
+      - linters: [gosec]
+        path: cmd/
+        text: "G70[36]"
+
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-

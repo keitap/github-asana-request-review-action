@@ -2,12 +2,13 @@ package githubasana
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"sort"
 	"strings"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v74/github"
 )
 
 const signature = "#github-asana-request-review"
@@ -114,20 +115,54 @@ func FindSubtaskByName(client *asana.Client, taskID string, findString string) (
 	return nil, nil
 }
 
-func AddCodeReviewSubtaskComment(client *asana.Client, subtask *asana.Task, requester *Account, reviewer *Account, pr *github.PullRequestReviewEvent) (*asana.Story, error) {
-	state := ""
-	switch pr.Review.GetState() {
+func buildReviewCommentHTML(reviewURL string, reviewState string, reviewerPermalink string, reviewBody string, commentCount int) string {
+	var stateEmoji, stateText string
+
+	switch reviewState {
 	case "approved":
-		state = "✅ Approved"
+		stateEmoji = "✅"
+		stateText = "Approved"
 	case "commented":
-		state = "💬 Commented"
+		stateEmoji = "💬"
+		stateText = "Commented"
 	case "changes_requested":
-		state = "❗️ Changes Requested"
+		stateEmoji = "❗️"
+		stateText = "Changes Requested"
 	}
 
+	statusLine := fmt.Sprintf("%s %s", stateEmoji, stateText)
+	if commentCount > 0 {
+		label := "comments"
+		if commentCount == 1 {
+			label = "comment"
+		}
+
+		statusLine = fmt.Sprintf("%s💬 %s with %d %s", stateEmoji, stateText, commentCount, label)
+	}
+
+	htmlText := fmt.Sprintf(`<body><a href="%s"><b>%s</b></a>: reviewed by %s`,
+		reviewURL, statusLine, reviewerPermalink)
+
+	if body := strings.TrimSpace(reviewBody); body != "" {
+		htmlText += "\n" + body
+	}
+
+	htmlText += `</body>`
+
+	return htmlText
+}
+
+func AddCodeReviewSubtaskComment(client *asana.Client, subtask *asana.Task, requester *Account, reviewer *Account, pr *github.PullRequestReviewEvent, commentCount int) (*asana.Story, error) {
+	htmlText := buildReviewCommentHTML(
+		pr.Review.GetHTMLURL(),
+		pr.Review.GetState(),
+		reviewer.GetUserPermalink(),
+		pr.Review.GetBody(),
+		commentCount,
+	)
+
 	story, err := subtask.CreateComment(client, &asana.StoryBase{
-		HTMLText: fmt.Sprintf(`<body><a href="%s"><b>%s</b></a>: reviewed by %s</body>`,
-			pr.Review.GetHTMLURL(), state, reviewer.GetUserPermalink()),
+		HTMLText: htmlText,
 	})
 	if err != nil {
 		return nil, err
@@ -140,6 +175,8 @@ func AddCodeReviewSubtaskComment(client *asana.Client, subtask *asana.Task, requ
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("subtask is updated to assignee:%s, status:%s", requester.Name, pr.Review.GetState())
 
 	return story, nil
 }
@@ -175,7 +212,7 @@ Could you please review a pull request ❤️
 }
 
 func getLabelsText(pr *github.PullRequestEvent) string {
-	labels := make([]string, 0)
+	labels := make([]string, 0, len(pr.PullRequest.Labels))
 	for _, l := range pr.PullRequest.Labels {
 		labels = append(labels, fmt.Sprintf("#<b>%s</b>", l.GetName()))
 	}

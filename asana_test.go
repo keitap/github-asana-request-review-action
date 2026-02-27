@@ -125,6 +125,40 @@ func TestParseAsanaTaskLink(t *testing.T) {
 	}
 }
 
+func html(status, suffix string) string {
+	reviewURL := "https://github.com/owner/repo/pull/1#pullrequestreview-123"
+	reviewerPermalink := `<a data-asana-gid="12345"/>`
+
+	return `<body><a href="` + reviewURL + `"><b>` + status + `</b></a>: reviewed by ` + reviewerPermalink + suffix + `</body>`
+}
+
+func TestBuildReviewCommentHTML(t *testing.T) {
+	reviewURL := "https://github.com/owner/repo/pull/1#pullrequestreview-123"
+	reviewerPermalink := `<a data-asana-gid="12345"/>`
+
+	tests := []struct {
+		name         string
+		state, body  string
+		commentCount int
+		expected     string
+	}{
+		{"approved without comments", "approved", "", 0, html("✅ Approved", "")},
+		{"approved with multiple comments", "approved", "", 3, html("✅💬 Approved with 3 comments", "")},
+		{"approved with single comment", "approved", "", 1, html("✅💬 Approved with 1 comment", "")},
+		{"approved with body and comments", "approved", "LGTM!", 3, html("✅💬 Approved with 3 comments", "\nLGTM!")},
+		{"approved with body only", "approved", "LGTM!", 0, html("✅ Approved", "\nLGTM!")},
+		{"changes_requested with comments", "changes_requested", "Please fix", 2, html("❗️💬 Changes Requested with 2 comments", "\nPlease fix")},
+		{"commented with comments", "commented", "", 1, html("💬💬 Commented with 1 comment", "")},
+		{"body with whitespace is trimmed", "approved", "  LGTM!  ", 0, html("✅ Approved", "\nLGTM!")},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := buildReviewCommentHTML(reviewURL, test.state, reviewerPermalink, test.body, test.commentCount)
+			assert.Equal(t, test.expected, got)
+		})
+	}
+}
+
 func TestAddPullRequestCommentToTask(t *testing.T) {
 	c := asana.NewClientWithAccessToken(asanaToken)
 
@@ -184,7 +218,7 @@ func TestCodeReviewSubtask(t *testing.T) {
 	t.Run("AddCodeReviewSubtaskComment", func(t *testing.T) {
 		pr := loadRequestReviewSubmittedEvent()
 
-		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr)
+		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr, 3)
 		require.NoError(t, err)
 	})
 }

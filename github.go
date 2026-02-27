@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v74/github"
 )
 
 func getRequestedReviewers(gh *github.Client, owner string, repo string, number int) ([]*github.User, error) {
@@ -14,4 +14,13 @@ func getRequestedReviewers(gh *github.Client, owner string, repo string, number 
 	}
 
 	return reviewers.Users, nil
+}
+
+func getReviewCommentCount(gh *github.Client, owner string, repo string, number int, reviewID int64) (int, error) {
+	comments, _, err := gh.PullRequests.ListReviewComments(context.Background(), owner, repo, number, reviewID, &github.ListOptions{PerPage: 100})
+	if err != nil {
+		return 0, fmt.Errorf("failed to get review comments: %w", err)
+	}
+
+	return len(comments), nil
 }

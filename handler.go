@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v74/github"
 )
 
 const (
@@ -227,6 +227,8 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 		return fmt.Errorf(": %w", err)
 	}
 
+	log.Printf("requester: %s:%s", requester.Name, requester.AsanaUserGID)
+
 	reviewer, err := h.fetchAccount(pr.Review.User.GetLogin())
 	if err != nil {
 		return fmt.Errorf(": %w", err)
@@ -243,12 +245,23 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 		return nil
 	}
 
-	_, err = AddCodeReviewSubtaskComment(h.ac, subtask, requester, reviewer, pr)
+	commentCount, err := getReviewCommentCount(
+		h.gh,
+		pr.GetRepo().GetOwner().GetLogin(),
+		pr.GetRepo().GetName(),
+		pr.PullRequest.GetNumber(),
+		pr.Review.GetID(),
+	)
 	if err != nil {
 		return fmt.Errorf(": %w", err)
 	}
 
-	log.Printf("review is submitted by reviewer: %s state: %s", reviewer.Name, pr.Review.GetState())
+	_, err = AddCodeReviewSubtaskComment(h.ac, subtask, requester, reviewer, pr, commentCount)
+	if err != nil {
+		return fmt.Errorf(": %w", err)
+	}
+
+	log.Printf("review is submitted by reviewer: %s state: %s comments: %d", reviewer.Name, pr.Review.GetState(), commentCount)
 
 	return nil
 }
@@ -258,6 +271,8 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 // Otherwise, it fetches the account of the pull request's user. Returns the account or an error if fetching fails.
 func (h *Handler) getAssigneeOrRequester(pr *github.PullRequestReviewEvent) (requester *Account, err error) {
 	if pr.PullRequest.User.GetType() == "Bot" && pr.PullRequest.Assignee != nil {
+		log.Printf("pull request user is a bot: %s", pr.PullRequest.User.GetLogin())
+
 		requester, err = h.fetchAccount(pr.PullRequest.Assignee.GetLogin())
 		if err != nil {
 			return nil, fmt.Errorf(": %w", err)
