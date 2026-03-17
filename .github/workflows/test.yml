@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Use local Dockerfile for testing
+        run: yq '.runs.image = "Dockerfile"' -i action.yml
       - name: Self test
         uses: ./
         env:
