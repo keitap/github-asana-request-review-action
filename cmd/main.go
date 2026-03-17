@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -29,13 +30,13 @@ func main() {
 		configPath,
 		os.Getenv("GITHUB_SHA"))
 	if err != nil {
-		log.Printf("::error ::cannot get config file: %s", err)
+		fmt.Fprintf(os.Stderr, "::error::cannot get config file: %s\n", err)
 		os.Exit(1)
 	}
 
 	conf, err := githubasana.LoadConfig(*configData)
 	if err != nil {
-		log.Printf("::error ::cannot load config file: %s", err)
+		fmt.Fprintf(os.Stderr, "::error::cannot load config file: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -44,7 +45,8 @@ func main() {
 	h := githubasana.NewHandler(conf, ac, gh)
 
 	if err := h.Handle(eventName, *eventPayload); err != nil {
-		log.Printf("::warning ::cannot handle github event: %s", err)
+		fmt.Fprintf(os.Stderr, "::error::cannot handle github event: %s\n", err)
+		os.Exit(1)
 	}
 
 	log.Printf("done.")
