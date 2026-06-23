@@ -2,6 +2,7 @@ package githubasana
 
 import (
 	"fmt"
+	"html"
 	"log"
 	"regexp"
 	"sort"
@@ -137,14 +138,20 @@ func buildReviewCommentHTML(reviewURL string, reviewState string, reviewerPermal
 			label = "comment"
 		}
 
-		statusLine = fmt.Sprintf("%s💬 %s with %d %s", stateEmoji, stateText, commentCount, label)
+		// avoid doubling the comment emoji when the state itself is "commented".
+		commentEmoji := "💬"
+		if stateEmoji == commentEmoji {
+			commentEmoji = ""
+		}
+
+		statusLine = fmt.Sprintf("%s%s %s with %d %s", stateEmoji, commentEmoji, stateText, commentCount, label)
 	}
 
 	htmlText := fmt.Sprintf(`<body><a href="%s"><b>%s</b></a>: reviewed by %s`,
-		reviewURL, statusLine, reviewerPermalink)
+		html.EscapeString(reviewURL), statusLine, reviewerPermalink)
 
 	if body := strings.TrimSpace(reviewBody); body != "" {
-		htmlText += "\n" + body
+		htmlText += "\n" + html.EscapeString(body)
 	}
 
 	htmlText += `</body>`
@@ -190,7 +197,7 @@ func createPullRequestCommentText(requester *Account, pr *github.PullRequestEven
 %s
 </code></body>`,
 		pr.PullRequest.GetState(),
-		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(), requester.GetUserPermalink(),
+		html.EscapeString(pr.PullRequest.GetHTMLURL()), pr.PullRequest.GetNumber(), html.EscapeString(pr.PullRequest.GetTitle()), requester.GetUserPermalink(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
 		getLabelsText(pr),
 		signature,
@@ -205,7 +212,7 @@ func createReviewRequestDescText(requester *Account, pr *github.PullRequestEvent
 
 Could you please review a pull request ❤️
 </body>`,
-		pr.PullRequest.GetHTMLURL(), pr.PullRequest.GetNumber(), pr.PullRequest.GetTitle(), requester.GetUserPermalink(),
+		html.EscapeString(pr.PullRequest.GetHTMLURL()), pr.PullRequest.GetNumber(), html.EscapeString(pr.PullRequest.GetTitle()), requester.GetUserPermalink(),
 		pr.PullRequest.GetChangedFiles(), pr.PullRequest.GetAdditions(), pr.PullRequest.GetDeletions(),
 		getLabelsText(pr),
 	)
@@ -214,7 +221,7 @@ Could you please review a pull request ❤️
 func getLabelsText(pr *github.PullRequestEvent) string {
 	labels := make([]string, 0, len(pr.PullRequest.Labels))
 	for _, l := range pr.PullRequest.Labels {
-		labels = append(labels, fmt.Sprintf("#<b>%s</b>", l.GetName()))
+		labels = append(labels, fmt.Sprintf("#<b>%s</b>", html.EscapeString(l.GetName())))
 	}
 
 	if len(labels) == 0 {
