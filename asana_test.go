@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
+	"github.com/google/go-github/v74/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -125,7 +126,7 @@ func TestParseAsanaTaskLink(t *testing.T) {
 	}
 }
 
-func html(status, suffix string) string {
+func commentHTML(status, suffix string) string {
 	reviewURL := "https://github.com/owner/repo/pull/1#pullrequestreview-123"
 	reviewerPermalink := `<a data-asana-gid="12345"/>`
 
@@ -142,14 +143,22 @@ func TestBuildReviewCommentHTML(t *testing.T) {
 		commentCount int
 		expected     string
 	}{
-		{"approved without comments", "approved", "", 0, html("✅ Approved", "")},
-		{"approved with multiple comments", "approved", "", 3, html("✅💬 Approved with 3 comments", "")},
-		{"approved with single comment", "approved", "", 1, html("✅💬 Approved with 1 comment", "")},
-		{"approved with body and comments", "approved", "LGTM!", 3, html("✅💬 Approved with 3 comments", "\nLGTM!")},
-		{"approved with body only", "approved", "LGTM!", 0, html("✅ Approved", "\nLGTM!")},
-		{"changes_requested with comments", "changes_requested", "Please fix", 2, html("❗️💬 Changes Requested with 2 comments", "\nPlease fix")},
-		{"commented with comments", "commented", "", 1, html("💬💬 Commented with 1 comment", "")},
-		{"body with whitespace is trimmed", "approved", "  LGTM!  ", 0, html("✅ Approved", "\nLGTM!")},
+		{"approved without comments", "approved", "", 0, commentHTML("✅ Approved", "")},
+		{"approved with multiple comments", "approved", "", 3, commentHTML("✅💬 Approved with 3 comments", "")},
+		{"approved with single comment", "approved", "", 1, commentHTML("✅💬 Approved with 1 comment", "")},
+		{"approved with body and comments", "approved", "LGTM!", 3, commentHTML("✅💬 Approved with 3 comments", "\nLGTM!")},
+		{"approved with body only", "approved", "LGTM!", 0, commentHTML("✅ Approved", "\nLGTM!")},
+		{"changes_requested with comments", "changes_requested", "Please fix", 2, commentHTML("❗️💬 Changes Requested with 2 comments", "\nPlease fix")},
+		{"commented with single comment", "commented", "", 1, commentHTML("💬 Commented with 1 comment", "")},
+		{"commented with multiple comments", "commented", "", 5, commentHTML("💬 Commented with 5 comments", "")},
+		{"body with whitespace is trimmed", "approved", "  LGTM!  ", 0, commentHTML("✅ Approved", "\nLGTM!")},
+		{"body with markdown blockquote is escaped", "approved", "> quoted", 0, commentHTML("✅ Approved", "\n&gt; quoted")},
+		{"body with html special chars is escaped", "approved", `a <b> & "c"`, 0, commentHTML("✅ Approved", "\na &lt;b&gt; &amp; &#34;c&#34;")},
+		{
+			"approved with comments and multiline blockquote body",
+			"approved", "> quoted line from a previous comment\n\nPlease keep a record of the source in the PR.", 3,
+			commentHTML("✅💬 Approved with 3 comments", "\n&gt; quoted line from a previous comment\n\nPlease keep a record of the source in the PR."),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -217,6 +226,18 @@ func TestCodeReviewSubtask(t *testing.T) {
 
 	t.Run("AddCodeReviewSubtaskComment", func(t *testing.T) {
 		pr := loadRequestReviewSubmittedEvent()
+
+		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr, 3)
+		require.NoError(t, err)
+	})
+
+	t.Run("AddCodeReviewSubtaskComment with blockquote body", func(t *testing.T) {
+		pr := loadRequestReviewSubmittedEvent()
+
+		// A review body starting with a markdown blockquote previously made the
+		// Asana html_text invalid and rendered the whole comment as raw HTML.
+		// Posting it to Asana verifies the escaped html_text renders correctly.
+		pr.Review.Body = github.Ptr("> quoted line from a previous comment\n\nPlease keep a record of the source in the PR.")
 
 		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr, 3)
 		require.NoError(t, err)

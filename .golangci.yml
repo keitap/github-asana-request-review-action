@@ -40,6 +40,11 @@ linters:
     - unparam
     - unused
     - whitespace
+  settings:
+    goconst:
+      # Test files repeat fixture literals (dates, logins, review states) where
+      # extracting constants hurts readability more than it helps.
+      ignore-tests: true
   exclusions:
     presets:
       - comments
