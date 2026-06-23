@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.1.7](https://github.com/keitap/github-asana-request-review-action/compare/v1.1.6...v1.1.7) (2026-06-23)
+
+
+### Bug Fixes
+
+* escape Asana html_text and dedupe comment emoji ([520ebe7](https://github.com/keitap/github-asana-request-review-action/commit/520ebe7c5a3c06817cdd8694fbb98b70fe271b26))
+* escape dynamic values in Asana html_text and dedupe comment emoji ([d80072b](https://github.com/keitap/github-asana-request-review-action/commit/d80072bd0a3d7a6e35367443c8917cf788840a27))
+* use github.Ptr instead of deprecated github.String in test ([96f48f8](https://github.com/keitap/github-asana-request-review-action/commit/96f48f8abef9e9e8a0a2b858d51063f56d0aa37f))
+
+
+### Dependencies
+
+* bump golang.org/x/oauth2 from 0.35.0 to 0.36.0 ([eacc5f6](https://github.com/keitap/github-asana-request-review-action/commit/eacc5f61024e29ac0786d50eb1cf1b970f08e874))
+
+
+### CI
+
+* add Dependabot config for gomod, github-actions and docker ([d703b50](https://github.com/keitap/github-asana-request-review-action/commit/d703b507993d74668a638e1a6755093386923758))
+* add govulncheck workflow ([6752728](https://github.com/keitap/github-asana-request-review-action/commit/6752728cd7acffd3ab0a67da939c7ed72ecca846))
+* add govulncheck workflow ([923e605](https://github.com/keitap/github-asana-request-review-action/commit/923e605a95b24fe06063dac83d3fea6ea28c48a7))
+* add security scanning (zizmor + trufflehog) and harden workflows ([90c1484](https://github.com/keitap/github-asana-request-review-action/commit/90c1484db08a248db30b1023568647dc5179267d))
+* add security workflow with zizmor and trufflehog ([c41a10f](https://github.com/keitap/github-asana-request-review-action/commit/c41a10f48be47aa964f0a68807112aa1464a775d))
+* bump actions/checkout to v7 and release-please-action to v5 ([dac09d6](https://github.com/keitap/github-asana-request-review-action/commit/dac09d6a4dcb197cfe80c052d8cf0218985239db))
+* bump docker actions and golangci-lint-action ([b01928f](https://github.com/keitap/github-asana-request-review-action/commit/b01928f90720eaaa491a06fa321ad95f95a2b274))
+* bump Go to 1.26 ([7c33bbc](https://github.com/keitap/github-asana-request-review-action/commit/7c33bbcc781852ee6f87ac8be1d3cf3f476a297f))
+* bump Go to 1.26 and update GitHub Actions ([f6d1093](https://github.com/keitap/github-asana-request-review-action/commit/f6d1093f3328c28211f5a301a46c8eb1db9a945d))
+* bump golangci-lint to v2.12.2 and ignore tests for goconst ([9155da8](https://github.com/keitap/github-asana-request-review-action/commit/9155da86398926e585d93f5829ec0d431f9cd781))
+* harden the go-test job after rebase ([ff0732f](https://github.com/keitap/github-asana-request-review-action/commit/ff0732f30159704c86dd276d9462ae97bea91a31))
+* pin actions to commit SHA and harden workflow permissions ([46941c9](https://github.com/keitap/github-asana-request-review-action/commit/46941c98284d7419ce9fb93968a34115f189e85b))
+* run go test in the test workflow ([7ad13d3](https://github.com/keitap/github-asana-request-review-action/commit/7ad13d3dc2a77735cee2fa0ea44f5f7da6e9b32d))
+* run go test in the test workflow ([4a09b10](https://github.com/keitap/github-asana-request-review-action/commit/4a09b10b1d250607319fd79aae286e1cfd63a92e))
+
+
+### Tests
+
+* add E2E coverage for blockquote review body ([8a30671](https://github.com/keitap/github-asana-request-review-action/commit/8a306711ee69b9c93b661959e360d43a2dfda6d5))
+* skip Asana integration tests only when explicitly requested ([0b652b5](https://github.com/keitap/github-asana-request-review-action/commit/0b652b590c30c2070a03ecc75b5c041bb751641f))
+* skip Asana integration tests only when explicitly requested ([bf28535](https://github.com/keitap/github-asana-request-review-action/commit/bf28535dc06ee8ae5e8f7881268b32a6d64048a0))
+
 ## [1.1.6](https://github.com/keitap/github-asana-request-review-action/compare/v1.1.5...v1.1.6) (2026-03-17)
 
 
