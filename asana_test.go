@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bitbucket.org/mikehouston/asana-go"
+	"github.com/google/go-github/v74/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -153,6 +154,11 @@ func TestBuildReviewCommentHTML(t *testing.T) {
 		{"body with whitespace is trimmed", "approved", "  LGTM!  ", 0, commentHTML("✅ Approved", "\nLGTM!")},
 		{"body with markdown blockquote is escaped", "approved", "> quoted", 0, commentHTML("✅ Approved", "\n&gt; quoted")},
 		{"body with html special chars is escaped", "approved", `a <b> & "c"`, 0, commentHTML("✅ Approved", "\na &lt;b&gt; &amp; &#34;c&#34;")},
+		{
+			"approved with comments and multiline blockquote body",
+			"approved", "> quoted line from a previous comment\n\nPlease keep a record of the source in the PR.", 3,
+			commentHTML("✅💬 Approved with 3 comments", "\n&gt; quoted line from a previous comment\n\nPlease keep a record of the source in the PR."),
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -220,6 +226,18 @@ func TestCodeReviewSubtask(t *testing.T) {
 
 	t.Run("AddCodeReviewSubtaskComment", func(t *testing.T) {
 		pr := loadRequestReviewSubmittedEvent()
+
+		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr, 3)
+		require.NoError(t, err)
+	})
+
+	t.Run("AddCodeReviewSubtaskComment with blockquote body", func(t *testing.T) {
+		pr := loadRequestReviewSubmittedEvent()
+
+		// A review body starting with a markdown blockquote previously made the
+		// Asana html_text invalid and rendered the whole comment as raw HTML.
+		// Posting it to Asana verifies the escaped html_text renders correctly.
+		pr.Review.Body = github.String("> quoted line from a previous comment\n\nPlease keep a record of the source in the PR.")
 
 		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr, 3)
 		require.NoError(t, err)
