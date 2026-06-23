@@ -8,7 +8,7 @@ require (
 	bitbucket.org/mikehouston/asana-go v0.0.0-20250814164459-d578140040b5
 	github.com/google/go-github/v74 v74.0.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/oauth2 v0.35.0
+	golang.org/x/oauth2 v0.36.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
