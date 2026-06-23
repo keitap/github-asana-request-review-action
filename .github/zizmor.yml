@@ -1,0 +1,6 @@
+rules:
+  artipacked:
+    ignore:
+      # The publish job's checkout must keep its credentials so the
+      # "Update major version tag" step can push the tag.
+      - release.yml

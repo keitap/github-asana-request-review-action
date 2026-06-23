@@ -19,12 +19,18 @@ on:
 # to avoid creating duplicate tasks.
 concurrency: ci-${{ github.ref }}
 
+permissions: {}
+
 jobs:
   go-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
       - name: Run Go tests
@@ -34,8 +40,13 @@ jobs:
 
   action-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
       - name: Use local Dockerfile for testing
         run: yq '.runs.image = "Dockerfile"' -i action.yml
       - name: Self test
