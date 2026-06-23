@@ -19,6 +19,8 @@ on:
 # to avoid creating duplicate tasks.
 concurrency: ci-${{ github.ref }}
 
+permissions: {}
+
 jobs:
   go-test:
     runs-on: ubuntu-latest
@@ -34,8 +36,13 @@ jobs:
 
   action-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
       - name: Use local Dockerfile for testing
         run: yq '.runs.image = "Dockerfile"' -i action.yml
       - name: Self test
