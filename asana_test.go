@@ -237,7 +237,7 @@ func TestCodeReviewSubtask(t *testing.T) {
 		// A review body starting with a markdown blockquote previously made the
 		// Asana html_text invalid and rendered the whole comment as raw HTML.
 		// Posting it to Asana verifies the escaped html_text renders correctly.
-		pr.Review.Body = github.String("> quoted line from a previous comment\n\nPlease keep a record of the source in the PR.")
+		pr.Review.Body = github.Ptr("> quoted line from a previous comment\n\nPlease keep a record of the source in the PR.")
 
 		_, err := AddCodeReviewSubtaskComment(c, subtask, requester, reviewer, pr, 3)
 		require.NoError(t, err)
