@@ -40,6 +40,22 @@ func init() {
 	asanaToken = os.Getenv("ASANA_TOKEN")
 }
 
+// requireAsanaToken guards tests that hit the live Asana API. It skips only
+// when SKIP_INTEGRATION_TEST is explicitly set (e.g. Dependabot runs, which
+// have no access to secrets); otherwise a missing token fails loudly so a
+// misconfigured secret is not silently treated as a pass.
+func requireAsanaToken(t *testing.T) {
+	t.Helper()
+
+	if os.Getenv("SKIP_INTEGRATION_TEST") == "true" {
+		t.Skip("SKIP_INTEGRATION_TEST is set; skipping Asana integration test")
+	}
+
+	if asanaToken == "" {
+		t.Fatal("ASANA_TOKEN is not set (set SKIP_INTEGRATION_TEST=true to skip integration tests)")
+	}
+}
+
 func createTask() string {
 	if taskID != "" {
 		return taskID
@@ -169,6 +185,8 @@ func TestBuildReviewCommentHTML(t *testing.T) {
 }
 
 func TestAddPullRequestCommentToTask(t *testing.T) {
+	requireAsanaToken(t)
+
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr := loadRequestReviewRequestedEvent()
@@ -180,6 +198,8 @@ func TestAddPullRequestCommentToTask(t *testing.T) {
 }
 
 func TestFindTaskComment(t *testing.T) {
+	requireAsanaToken(t)
+
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	tests := []struct {
@@ -200,6 +220,8 @@ func TestFindTaskComment(t *testing.T) {
 }
 
 func TestUpdateTaskComment(t *testing.T) {
+	requireAsanaToken(t)
+
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr := loadRequestReviewRequestedEvent()
@@ -209,6 +231,8 @@ func TestUpdateTaskComment(t *testing.T) {
 }
 
 func TestCodeReviewSubtask(t *testing.T) {
+	requireAsanaToken(t)
+
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	var subtask *asana.Task
@@ -245,6 +269,8 @@ func TestCodeReviewSubtask(t *testing.T) {
 }
 
 func TestFindSubtaskByName(t *testing.T) {
+	requireAsanaToken(t)
+
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	pr := loadRequestReviewRequestedEvent()
