@@ -1,6 +1,6 @@
 module github.com/keitap/github-asana-request-review-action
 
-go 1.25.5
+go 1.26.4
 
 replace bitbucket.org/mikehouston/asana-go => github.com/keitap/asana-go v0.0.0-20210425173123-936f596fb971
 
