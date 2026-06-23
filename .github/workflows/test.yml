@@ -37,6 +37,9 @@ jobs:
         run: go test ./...
         env:
           ASANA_TOKEN: "${{ secrets.ASANA_TOKEN }}"
+          # Dependabot runs have no access to secrets, so skip the Asana
+          # integration tests there instead of failing on the missing token.
+          SKIP_INTEGRATION_TEST: ${{ github.actor == 'dependabot[bot]' && 'true' || '' }}
 
   action-test:
     runs-on: ubuntu-latest

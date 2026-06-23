@@ -42,6 +42,8 @@ func pInt(i int) *int {
 }
 
 func TestHandler_handlePullRequestEvent(t *testing.T) {
+	requireAsanaToken(t)
+
 	conf := &Config{
 		Accounts: map[GithubLogin]AsanaGID{
 			"keitap":     "5590853215184",
@@ -59,6 +61,8 @@ func TestHandler_handlePullRequestEvent(t *testing.T) {
 }
 
 func TestHandler_handlePullRequestEvent_NoConfig(t *testing.T) {
+	requireAsanaToken(t)
+
 	conf := &Config{}
 
 	ac := asana.NewClientWithAccessToken(asanaToken)
@@ -71,6 +75,8 @@ func TestHandler_handlePullRequestEvent_NoConfig(t *testing.T) {
 }
 
 func TestHandler_getAssigneeOrRequester(t *testing.T) {
+	requireAsanaToken(t)
+
 	conf := &Config{
 		Accounts: map[GithubLogin]AsanaGID{
 			"keitap":     "5590853215184",

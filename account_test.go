@@ -22,6 +22,8 @@ func TestNewNoAsanaAccount(t *testing.T) {
 }
 
 func TestNewFromUserTaskListGID(t *testing.T) {
+	requireAsanaToken(t)
+
 	c := asana.NewClientWithAccessToken(asanaToken)
 
 	a, err := NewAccount(c, asanaUserGID, "keitap")
