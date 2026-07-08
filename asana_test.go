@@ -1,6 +1,11 @@
 package githubasana
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -217,6 +222,119 @@ func TestFindTaskComment(t *testing.T) {
 			assert.Equal(t, test.expected, story != nil)
 		})
 	}
+}
+
+// newFakeAsanaClient returns a client pointed at a local fake Asana API.
+func newFakeAsanaClient(t *testing.T, handler http.Handler) *asana.Client {
+	t.Helper()
+
+	srv := httptest.NewServer(handler)
+	t.Cleanup(srv.Close)
+
+	c := asana.NewClient(srv.Client())
+
+	u, err := url.Parse(srv.URL)
+	require.NoError(t, err)
+
+	c.BaseURL = u
+
+	return c
+}
+
+func writeAsanaPage(t *testing.T, w http.ResponseWriter, data any, nextOffset string) {
+	t.Helper()
+
+	resp := map[string]any{"data": data}
+	if nextOffset != "" {
+		resp["next_page"] = map[string]string{"offset": nextOffset}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	require.NoError(t, json.NewEncoder(w).Encode(resp))
+}
+
+// TestFindTaskCommentAcrossPages reproduces the duplicate comment incident:
+// the stories endpoint returns entries oldest first, so on a task with more
+// than 100 stories the bot's comment only appears on a later page.
+func TestFindTaskCommentAcrossPages(t *testing.T) {
+	fillerPage := make([]map[string]string, 100)
+	for i := range fillerPage {
+		fillerPage[i] = map[string]string{"gid": fmt.Sprintf("sys-%d", i), "text": "changed the due date"}
+	}
+
+	tests := []struct {
+		name       string
+		secondPage []map[string]string
+		expectedID string
+	}{
+		{
+			name: "comment on second page is found",
+			secondPage: []map[string]string{
+				{"gid": "story-101", "text": "PR comment\n\n" + signature},
+			},
+			expectedID: "story-101",
+		},
+		{
+			name:       "no comment on any page",
+			secondPage: []map[string]string{{"gid": "sys-101", "text": "liked the task"}},
+			expectedID: "",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mux := http.NewServeMux()
+			mux.HandleFunc("/tasks/42/stories", func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Query().Get("offset") {
+				case "":
+					writeAsanaPage(t, w, fillerPage, "page2")
+				case "page2":
+					writeAsanaPage(t, w, test.secondPage, "")
+				default:
+					http.Error(w, "unexpected offset", http.StatusBadRequest)
+				}
+			})
+
+			c := newFakeAsanaClient(t, mux)
+
+			story, err := FindTaskComment(c, "42", signature)
+			require.NoError(t, err)
+
+			if test.expectedID == "" {
+				assert.Nil(t, story)
+			} else {
+				require.NotNil(t, story)
+				assert.Equal(t, test.expectedID, story.ID)
+			}
+		})
+	}
+}
+
+func TestFindSubtaskByNameAcrossPages(t *testing.T) {
+	fillerPage := make([]map[string]string, 100)
+	for i := range fillerPage {
+		fillerPage[i] = map[string]string{"gid": fmt.Sprintf("sub-%d", i), "name": fmt.Sprintf("subtask %d", i)}
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/tasks/42/subtasks", func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Query().Get("offset") {
+		case "":
+			writeAsanaPage(t, w, fillerPage, "page2")
+		case "page2":
+			writeAsanaPage(t, w, []map[string]string{
+				{"gid": "sub-101", "name": "✍️ Code review: #123 Keita Kitamura (@keitap)"},
+			}, "")
+		default:
+			http.Error(w, "unexpected offset", http.StatusBadRequest)
+		}
+	})
+
+	c := newFakeAsanaClient(t, mux)
+
+	subtask, err := FindSubtaskByName(c, "42", "@keitap")
+	require.NoError(t, err)
+	require.NotNil(t, subtask)
+	assert.Equal(t, "sub-101", subtask.ID)
 }
 
 func TestUpdateTaskComment(t *testing.T) {

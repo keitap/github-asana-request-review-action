@@ -43,22 +43,31 @@ func AddPullRequestCommentToTask(client *asana.Client, taskID string, requester 
 }
 
 // FindTaskComment finds a story which contains specified string.
+// Stories include every activity event (field changes, likes, etc.), not just
+// comments, and the API returns them oldest first. Busy tasks easily exceed
+// one page, so all pages must be scanned before concluding there is no match.
 func FindTaskComment(client *asana.Client, taskID string, findString string) (*asana.Story, error) {
 	task := &asana.Task{ID: taskID}
-	stories, _, err := task.Stories(client, &asana.Options{
-		Limit: 100,
-	})
-	if err != nil {
-		return nil, err
-	}
+	opts := &asana.Options{Limit: 100}
 
-	for _, s := range stories {
-		if strings.Contains(s.Text, findString) {
-			return s, nil
+	for {
+		stories, nextPage, err := task.Stories(client, opts)
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	return nil, nil
+		for _, s := range stories {
+			if strings.Contains(s.Text, findString) {
+				return s, nil
+			}
+		}
+
+		if nextPage == nil || nextPage.Offset == "" {
+			return nil, nil
+		}
+
+		opts.Offset = nextPage.Offset
+	}
 }
 
 func UpdateTaskComment(client *asana.Client, storyID string, requester *Account, pr *github.PullRequestEvent) (*asana.Story, error) {
@@ -97,23 +106,29 @@ func UpdateCodeReviewSubtask(client *asana.Client, subtask *asana.Task, requeste
 }
 
 // FindSubtaskByName finds a subtask which contains specified string.
+// Subtasks are paginated the same way as stories, so scan all pages.
 func FindSubtaskByName(client *asana.Client, taskID string, findString string) (*asana.Task, error) {
 	task := &asana.Task{ID: taskID}
+	opts := &asana.Options{Limit: 100}
 
-	subtasks, _, err := task.Subtasks(client, &asana.Options{
-		Limit: 100,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, s := range subtasks {
-		if strings.Contains(s.Name, findString) {
-			return s, nil
+	for {
+		subtasks, nextPage, err := task.Subtasks(client, opts)
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	return nil, nil
+		for _, s := range subtasks {
+			if strings.Contains(s.Name, findString) {
+				return s, nil
+			}
+		}
+
+		if nextPage == nil || nextPage.Offset == "" {
+			return nil, nil
+		}
+
+		opts.Offset = nextPage.Offset
+	}
 }
 
 func buildReviewCommentHTML(reviewURL string, reviewState string, reviewerPermalink string, reviewBody string, commentCount int) string {
