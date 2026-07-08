@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.8](https://github.com/keitap/github-asana-request-review-action/compare/v1.1.7...v1.1.8) (2026-07-08)
+
+
+### Bug Fixes
+
+* paginate story and subtask search to prevent duplicate comments ([f1ec388](https://github.com/keitap/github-asana-request-review-action/commit/f1ec388f9007fe56f7f24d77e347766d21ec46f8))
+* paginate story and subtask search to prevent duplicate comments ([08b5123](https://github.com/keitap/github-asana-request-review-action/commit/08b512326f80037c224690805c6d7201c7380c61))
+
+
+### CI
+
+* bump actions/setup-go from 6.4.0 to 6.5.0 ([a7e0b3d](https://github.com/keitap/github-asana-request-review-action/commit/a7e0b3d0020b92e6256d41a3f01dc2d1099b266a))
+* bump actions/setup-go from 6.4.0 to 6.5.0 ([a042140](https://github.com/keitap/github-asana-request-review-action/commit/a0421406a7f15004214898bd50c4fac39c1d03f5))
+* bump docker/build-push-action from 7.2.0 to 7.3.0 ([1e72d42](https://github.com/keitap/github-asana-request-review-action/commit/1e72d4293233fba322a600a9cf240c9a2261f9f4))
+* bump docker/build-push-action from 7.2.0 to 7.3.0 ([6c89f7c](https://github.com/keitap/github-asana-request-review-action/commit/6c89f7c548f9dc9f599cce36055be76ef2e86c5f))
+* bump docker/setup-buildx-action from 4.1.0 to 4.2.0 ([e77a0a2](https://github.com/keitap/github-asana-request-review-action/commit/e77a0a25aef8017e64adfce476d399fc0a26aa9a))
+* bump docker/setup-buildx-action from 4.1.0 to 4.2.0 ([738793c](https://github.com/keitap/github-asana-request-review-action/commit/738793c47f6de7a7f074ab08053aedc861acf566))
+* bump golangci/golangci-lint-action from 9.2.1 to 9.3.0 ([e665952](https://github.com/keitap/github-asana-request-review-action/commit/e6659524f919da5f0caa317f84e037a9b4dc7dc8))
+* bump golangci/golangci-lint-action from 9.2.1 to 9.3.0 ([0323285](https://github.com/keitap/github-asana-request-review-action/commit/03232856423c897b8a9f735a9971963b38dd48f4))
+* bump trufflesecurity/trufflehog from 3.95.6 to 3.95.8 ([00f3fbc](https://github.com/keitap/github-asana-request-review-action/commit/00f3fbc8a88eb38819f9dce48a4f0320c4c8b2bf))
+* bump trufflesecurity/trufflehog from 3.95.6 to 3.95.8 ([7fb9149](https://github.com/keitap/github-asana-request-review-action/commit/7fb914986edfe587eb3d497689b7505cdb84f6d2))
+
 ## [1.1.7](https://github.com/keitap/github-asana-request-review-action/compare/v1.1.6...v1.1.7) (2026-06-23)
 
 
