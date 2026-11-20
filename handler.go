@@ -155,7 +155,9 @@ func (h *Handler) upsertReviewer(pr *github.PullRequestEvent, requester *Account
 	due := asana.Date(NextBusinessDay(h.conf.DueDate, time.Now(), h.conf.Holidays))
 
 	// add a review request task as a subtask if not exists.
-	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
+	// Search by PR number and reviewer name so that each PR gets its own review subtask
+	// even when multiple PRs link to the same Asana task.
+	subtask, err := FindSubtaskByName(h.ac, taskID, fmt.Sprintf("#%d %s", pr.GetNumber(), reviewer.Name))
 	if err != nil {
 		return fmt.Errorf(": %w", err)
 	}
@@ -234,7 +236,7 @@ func (h *Handler) handlePullRequestReviewEvent(pr *github.PullRequestReviewEvent
 		return fmt.Errorf(": %w", err)
 	}
 
-	subtask, err := FindSubtaskByName(h.ac, taskID, reviewer.Name)
+	subtask, err := FindSubtaskByName(h.ac, taskID, fmt.Sprintf("#%d %s", pr.PullRequest.GetNumber(), reviewer.Name))
 	if err != nil {
 		return fmt.Errorf(": %w", err)
 	}
